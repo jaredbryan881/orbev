@@ -18,6 +18,7 @@ def main():
 		Omega_orb=hf["Omega_orb"][:]
 		e=hf["e"][:]
 
+		# secular evolution coefficients (G factors)
 		Gbar_1=hf["Gbar_1"][:]
 		Gbar_2=hf["Gbar_2"][:]
 		Gbar_3=hf["Gbar_3"][:]
@@ -33,38 +34,47 @@ def main():
 	q=q[0]
 	eps_tide=(R_a**3)*q
 
+	# calculate eulerian perturbation to the gravitational potential
 	eul_Psi_ref_temp=np.zeros(len(eul_Psi_ref), dtype=np.complex128)
 	for i in range(len(eul_Psi_ref)):
 		eul_Psi_ref_temp[i] = eul_Psi_ref[i][0] + 1j*eul_Psi_ref[i][1]
 	eul_phi=eul_Psi_ref_temp
 	eul_phi.real-=Phi_T_ref
 
-	n_l=len(np.unique(l))
-	n_m=len(np.unique(m))
-	n_k=len(np.unique(k))
+	lun=np.unique(l)
+	mun=np.unique(m)
+	kun=np.unique(k)
+
+	n_l=len(lun)
+	n_m=len(mun)
+	n_k=len(kun) 
 
 	o_dots=np.zeros((n_l,n_m,n_k))
 	a_dots=np.zeros((n_l,n_m,n_k))
 	e_dots=np.zeros((n_l,n_m,n_k))
 	J_dots=np.zeros((n_l,n_m,n_k))
 
-	for (i1,l_cur) in enumerate(np.unique(l)):
-		for (i2,m_cur) in enumerate(np.unique(m)):
-			for (i3,k_cur) in enumerate(np.unique(k)):
-				ind = i2*n_k + i3
+	print(len(l))
+	for ind in range(len(l)):
+		# locate the current mode
+		i_l = np.where(lun==l[ind])[0]
+		i_m = np.where(mun==m[ind])[0]
+		i_k = np.where(kun==k[ind])[0]
 
-				c=cbar[ind]
-				kappa=get_kappa(m_cur,k_cur)
-				if (c==0) or (kappa==0):
-					continue
+		c=cbar[ind]
+		kappa=get_kappa(m[ind], k[ind])
+		if (c==0) or (kappa==0):
+			continue
 
-				F = -(1/2)*(np.sqrt(4*np.pi)*eul_phi[ind]/(eps_tide*c) + 1)
-				gamma = np.arctan2(np.imag(F), np.real(F))
+		# calculate tidal response amplitude and phase
+		F = -(1/2)*(np.sqrt(4*np.pi)*eul_phi[ind]/(eps_tide*c) + 1)
+		gamma = np.arctan2(np.imag(F), np.real(F))
 
-				o_dots[i1,i2,i3] = 4*Omega_orb*q*(R_a)**(l_cur+3)*kappa*np.abs(F)*np.cos(gamma)*Gbar_1[ind]
-				a_dots[i1,i2,i3] = 4*Omega_orb*(q/R_a)*(R_a)**(l_cur+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_2[ind]
-				e_dots[i1,i2,i3] = 4*Omega_orb*q*(R_a)**(l_cur+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_3[ind]
-				J_dots[i1,i2,i3] = 4*Omega_orb*q**2/np.sqrt(R_a*(1+q))*(R_a)**(l_cur+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_4[ind]
+		# calculate orbital evolution rates
+		o_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.cos(gamma)*Gbar_1[ind]
+		a_dots[i_l,i_m,i_k] = 4*Omega_orb*(q/R_a)*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_2[ind]
+		e_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_3[ind]
+		J_dots[i_l,i_m,i_k] = 4*Omega_orb*q**2/np.sqrt(R_a*(1+q))*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_4[ind]
 
 	with h5py.File("./profile{}/tide_orbit.h5".format(pind-1), "a") as hf:
 		hf.create_dataset("o_dot_freq", data=o_dots)
