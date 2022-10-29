@@ -54,7 +54,6 @@ def main():
 	e_dots=np.zeros((n_l,n_m,n_k))
 	J_dots=np.zeros((n_l,n_m,n_k))
 
-	print(len(l))
 	for ind in range(len(l)):
 		# locate the current mode
 		i_l = np.where(lun==l[ind])[0]

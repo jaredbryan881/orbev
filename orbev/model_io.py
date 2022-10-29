@@ -140,7 +140,7 @@ def update_history(time, a, e, OmegaRot):
 	with open("orbital_history.data", "a+") as f:
 		np.savetxt(f, np.array([[time,a,e,OmegaRot]]), delimiter=',', header=header, comments='')
 
-def update_orbital_parameters(OmegaOrb, OmegaRot, e, finame="./gyre_tides.in"):
+def update_orbital_parameters(OmegaOrb, OmegaRot, e, finame="gyre_tides.in"):
 	"""Update orbital parameters in the GYRE-tides input file.
 
 	Arguments

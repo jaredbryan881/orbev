@@ -55,8 +55,10 @@ def main():
 	print("Loading tide_orbit")
 	with h5py.File("./profile{}/tide_orbit.h5".format(pind-1), "r") as hf:
 		# orbital parameters
-		Omega_orb=hf["Omega_orb"][0]
+		Omega_orb=hf["Omega_orb"][0]*fs
+
 		a=OmegaOrb_to_a(Omega_orb, cur_M)
+
 		e=hf["e"][0]
 
 		# orbital evolution rates
