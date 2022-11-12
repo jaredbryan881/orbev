@@ -59,12 +59,12 @@ def load_profile(finame):
 			 "nab_ad"    : data[:,10], # adiabatic temmperature gradient
 			 "nu_T"      : data[:,11], # thermodynamic coefficient
 			 "kap"       : data[:,12], # opacity
-			 "kap_T"     : data[:,12], # opacity partial
-			 "kap_rho"   : data[:,13], # opacity partial
-			 "eps_n"     : data[:,14], # nuclear energy generation rate
-			 "eps_n_T"   : data[:,15], # nuclear energy generation rate partial
-			 "eps_n_rho" : data[:,16], # nuclear energy generation rate partial
-			 "Omega_rot" : data[:,17]  # Rotational velocity
+			 "kap_T"     : data[:,13], # opacity partial
+			 "kap_rho"   : data[:,14], # opacity partial
+			 "eps_n"     : data[:,15], # nuclear energy generation rate
+			 "eps_n_T"   : data[:,16], # nuclear energy generation rate partial
+			 "eps_n_rho" : data[:,17], # nuclear energy generation rate partial
+			 "Omega_rot" : data[:,18]  # Rotational velocity
 			}
 
 	header=np.loadtxt(finame, max_rows=1) # Npts, Mass [g], Radius [cm], Luminosity [erg/s]
