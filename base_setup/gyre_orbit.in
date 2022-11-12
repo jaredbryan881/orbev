@@ -18,7 +18,7 @@
 
 &rot
     Omega_rot_source = 'UNIFORM'
-    Omega_rot=0.8
+    Omega_rot=0.4
     Omega_rot_units = 'CYC_PER_DAY'
 /
 

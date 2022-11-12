@@ -1,5 +1,7 @@
 #!/bin/bash
 
+conda activate astero
+
 # directory containing template gyre inlists
 base_dir="/home/jared/MIT/astero/gyre_HATP2/parameter_search/base_setup"
 # directory containing the MESA stellar profiles
@@ -19,20 +21,17 @@ do
 		mkdir $cur_dir
 		cd $cur_dir
 
-		# copy the update scripts
-		cp ../update_orbital_parameters.py .
-		cp ../update_stellar_profile.py .
-		cp ../interpolate_profile.py .
-		cp ../calculate_orbev.py .
-		cp ../unit_conversion.py .
-		cp ../calculate_Is.py .
-		cp ../model_io.py .
+		# copy the update scripts		
+		cp ../orbev/*.py .
 
-		# copy the parameters
-		cp ../params.py .
+		# copy the initial orbital conditions and update parameters
+		cp ../base_setup/params.py .
 
 		# copy the first profile into working directory as our starting point
 		cp $mesa_dir/$cur_dir/LOGS/profile1.data.GYRE profile_cur.data.GYRE
+
+		# get the free-oscillation gyre inlist
+		cp $base_dir/gyre.in .
 
 		# calculate the moments of inertia for the (noninterpolated MESA models)
 		python calculate_Is.py $cur_dir
@@ -61,15 +60,20 @@ do
 			# update the stellar model in the working directory
 			python update_stellar_profile.py $i $cur_dir
 
+			# Run free-oscillation code to get spatial grid
+			$GYRE_DIR/bin/gyre gyre.in
+
 			# Calculate the orbtial evolution rates
 			$GYRE_DIR/bin/gyre_tides gyre_tides.in
 
 			# clean up the current directory
 			# get rid of the gyre inlist
 			rm gyre_tides.in
-
+			# move output files to profile directory
 			mkdir profile$i
-			mv *.h5 profile$i/
+			mv detail_nad.h5 profile$i/   # move spatial grid
+			mv free_summary.h5 profile$i/ # move free oscillation summary
+			mv tide_orbit.h5 profile$i/   # move forced oscillation summary
 		done
 
 		cd ..

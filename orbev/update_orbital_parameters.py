@@ -82,9 +82,9 @@ def main():
 
 	print("Time: {} Myr".format(cur_time/1e6))
 	print("dt = {} Myr".format(dt/1e6))
-	print("edot = {} 1/yr".format(edot))
-	print("adot = {} au/yr".format(adot))
-	print("OmegaRotdot = {} cyc/day/yr".format(OmegaRotdot))
+	print("edot = {} 1/yr; de={}".format(edot, dt*edot))
+	print("adot = {} au/yr; da={}".format(adot, dt*adot))
+	print("OmegaRotdot = {} cyc/day/yr; dOmegaRot={}".format(OmegaRotdot, dt*OmegaRotdot))
 
 	# update e
 	new_e = e + dt*edot
