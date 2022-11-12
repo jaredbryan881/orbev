@@ -2,8 +2,8 @@
 # Initial Orbital Configuration #
 #################################
 e0 = 0.5        # []
-OmegaOrb0 = 0.177 # [cyc/day]
-OmegaRot0 = OmegaOrb0*4 # [cyc/day]
+OmegaOrb0 = 0.2 # [cyc/day]
+OmegaRot0 = OmegaOrb0*2 # [cyc/day]
 
 #################
 # Update limits #
