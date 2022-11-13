@@ -34,7 +34,7 @@ do
 		cp $base_dir/gyre.in .
 
 		# calculate the moments of inertia for the (noninterpolated MESA models)
-		python calculate_Is.py $cur_dir
+		python calculate_Is.py $mesa_dir/$cur_dir/LOGS
 
 		# take some finite number of steps
 		for i in {1..200}

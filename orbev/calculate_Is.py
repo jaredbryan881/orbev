@@ -11,13 +11,10 @@ Msun = 1.989e30  # [kg]
 au = 1.496e+11   # [m]
 
 def main():
-	cur_dir=sys.argv[1]
+	base_finame=sys.argv[1]
 
-	base_finame="/home/jared/MIT/astero/mesa_HATP2/live_planet/{}/LOGS".format(cur_dir)
-	
 	n_files=sum([len([file for file in files if ('.data.GYRE' in file)]) for root, dirs, files in sorted(os.walk(base_finame))])
 	pinds = np.arange(1,1+n_files)
-	# pinds=np.arange(1,201)
 	Is=np.zeros(len(pinds))
 	for (i,pind) in enumerate(pinds):
 		profile, header = load_profile("{}/profile{}.data.GYRE".format(base_finame, pind))
@@ -26,7 +23,7 @@ def main():
 	np.savetxt("stellar_MOIs.txt", Is)
 
 def MOI(M, R):
-	"""Calculate the moment of inertia of a 1D stellar model as the sum of 
+	"""Calculate the moment of inertia of a 1D stellar model as the sum of
 	moments of inertia in a series of thick spherical shells.
 
 	Arguments
@@ -46,7 +43,7 @@ def MOI(M, R):
 
 	R/=100  # [m]
 	R/=Rsun # [Rsun]
-	
+
 	# mass in each layer
 	dM = M[1:]-M[:-1]
 
