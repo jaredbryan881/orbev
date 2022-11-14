@@ -24,7 +24,7 @@ def save_profile(profile, header):
 	with open("profile_cur.data.GYRE", "a+") as f:
 		# formatting is to match profile.data.GYRE
 		# https://gyre.readthedocs.io/en/stable/ref-guide/stellar-models/mesa-file-format-v1.01.html
-		# header has two leading spaces, an integer number of points, 16-decimal exponential notation floats, 
+		# header has two leading spaces, an integer number of points, 16-decimal exponential notation floats,
 		# and another integer for the version number, each separated by 5 spaces
 		# body has 5 leading spaces, an integer index, and 16-decimal place exponential floats,
 		# each separated by 5 spaces
@@ -104,7 +104,7 @@ def load_orbital_state(oh_finame):
 	-------
 	:return time: float
 		Current stellar age
-	:return a: float 
+	:return a: float
 		Current orbital semi-major axis [au]
 	:return e: float
 		Current orbital eccentricity []
@@ -122,7 +122,7 @@ def update_history(time, a, e, OmegaRot):
 	---------
 	:param time: float
 		Current stellar age
-	:param a: float 
+	:param a: float
 		Current orbital semi-major axis [au]
 	:param e: float
 		Current orbital eccentricity []

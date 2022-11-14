@@ -45,7 +45,7 @@ def get_interpolation_axis(d1, d2, nbin=100):
 	if N1!=N2:
 		# we want to resample the curves so they have the same number of points
 		# but the curves are variably sampled, so we want to respect sampling density.
-		
+
 		# First, let's calculate the density of the two curves
 		bins=np.linspace(0,1,nbin+1)
 		den1,_=np.histogram(d1["r"]/d1["r"].max(), bins)

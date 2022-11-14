@@ -3,7 +3,7 @@
 conda activate astero
 
 # directory containing template gyre inlists
-base_dir="/home/jared/MIT/astero/gyre_HATP2/parameter_search/base_setup"
+base_dir="/home/jared/MIT/astero/gyre_HATP2/orbev/base_setup"
 # directory containing the MESA stellar profiles
 mesa_dir="/home/jared/MIT/astero/mesa_HATP2/live_planet"
 # GYRE directory (with GYRE-tides enabled)

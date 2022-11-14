@@ -47,7 +47,7 @@ def main():
 
 	n_l=len(lun)
 	n_m=len(mun)
-	n_k=len(kun) 
+	n_k=len(kun)
 
 	o_dots=np.zeros((n_l,n_m,n_k))
 	a_dots=np.zeros((n_l,n_m,n_k))

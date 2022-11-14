@@ -27,10 +27,10 @@ def OmegaOrb_to_a(OmegaOrb, M):
 
 	Arguments
 	---------
-	:param OmegaOrb: float 
+	:param OmegaOrb: float
 		Orbital frequency [cyc/day]
 
-	Returns 
+	Returns
 	-------
 	:return a: float
 		Semi-major axis [au]
