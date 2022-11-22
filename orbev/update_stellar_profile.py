@@ -66,7 +66,7 @@ def main():
 		header=header_mid
 
 	# interpolate and save current stellar moment of inertia
-	Is=np.loadtxt("stellar_MOIs.txt")
+	Is=np.loadtxt("{}/stellar_MOIs.txt".format(base_sh_finame))
 	cur_I = lin_interp_2d(Is[pnum1], Is[pnum2], pct)
 	np.savetxt("current_stellar_MOI.txt", np.array([cur_I]))
 

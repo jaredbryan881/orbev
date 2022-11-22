@@ -13,6 +13,10 @@ au = 1.496e+11   # [m]
 def main():
 	base_finame=sys.argv[1]
 
+	if os.path.exists("{}/stellar_MOIs.txt".format(base_finame)):
+		print("Stellar MOI file already exists")
+		return
+
 	n_files=sum([len([file for file in files if ('.data.GYRE' in file)]) for root, dirs, files in sorted(os.walk(base_finame))])
 	pinds = np.arange(1,1+n_files)
 	Is=np.zeros(len(pinds))
@@ -20,7 +24,7 @@ def main():
 		profile, header = load_profile("{}/profile{}.data.GYRE".format(base_finame, pind))
 		Is[i] = MOI(profile["M"], profile["r"]) # Msun*Rsun^2
 
-	np.savetxt("stellar_MOIs.txt", Is)
+	np.savetxt("{}/stellar_MOIs.txt".format(base_finame), Is)
 
 def MOI(M, R):
 	"""Calculate the moment of inertia of a 1D stellar model as the sum of
