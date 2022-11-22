@@ -30,14 +30,11 @@ do
 		# copy the first profile into working directory as our starting point
 		cp $mesa_dir/$cur_dir/LOGS/profile1.data.GYRE profile_cur.data.GYRE
 
-		# get the free-oscillation gyre inlist
-		cp $base_dir/gyre.in .
-
 		# calculate the moments of inertia for the (noninterpolated MESA models)
 		python calculate_Is.py $mesa_dir/$cur_dir/LOGS
 
 		# take some finite number of steps
-		for i in {1..200}
+		for i in {1..100}
 		do
 			echo $i
 
@@ -60,9 +57,6 @@ do
 			# update the stellar model in the working directory
 			python update_stellar_profile.py $i $cur_dir
 
-			# Run free-oscillation code to get spatial grid
-			$GYRE_DIR/bin/gyre gyre.in
-
 			# Calculate the orbtial evolution rates
 			$GYRE_DIR/bin/gyre_tides gyre_tides.in
 
@@ -71,8 +65,6 @@ do
 			rm gyre_tides.in
 			# move output files to profile directory
 			mkdir profile$i
-			mv detail_nad.h5 profile$i/   # move spatial grid
-			mv free_summary.h5 profile$i/ # move free oscillation summary
 			mv tide_orbit.h5 profile$i/   # move forced oscillation summary
 		done
 
