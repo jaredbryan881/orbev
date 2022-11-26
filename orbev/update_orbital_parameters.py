@@ -25,9 +25,11 @@ def main():
 	# load command line arguments
 	pind=int(sys.argv[1])
 	cur_dir=sys.argv[2]
+	ip=int(sys.argv[3]) # initial profile index
 
 	# Read stellar history file
-	sh_finame="/home/jared/MIT/astero/mesa_HATP2/live_planet/{}/LOGS/history.data".format(cur_dir)
+	base_sh_finame="/home/jared/MIT/astero/mesa_HATP2/live_planet/{}/LOGS/".format(cur_dir)
+	sh_finame=base_sh_finame+"history.data"
 	sh=mr.MesaData(sh_finame)
 
 	# get stellar state from the current profile.data.GYRE
@@ -40,7 +42,8 @@ def main():
 		update_orbital_parameters(params.OmegaOrb0, params.OmegaRot0, params.e0, params.finame)
 		# Initialize orbital configuration history file
 		a0=OmegaOrb_to_a(params.OmegaOrb0, cur_M)
-		update_history(sh.star_age[0], a0, params.e0, params.OmegaRot0)
+		# initialize history file
+		update_history(sh.star_age[ip], a0, params.e0, params.OmegaRot0)
 		return
 
 	# Read orbital configuration

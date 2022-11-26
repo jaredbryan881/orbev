@@ -12,6 +12,8 @@ export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 Zs=(0.02)
 Ms=(1.40)
 
+ip_ind=10
+
 for m in "${Ms[@]}"
 do
 	for z in "${Zs[@]}"
@@ -28,7 +30,7 @@ do
 		cp ../base_setup/params.py .
 
 		# copy the first profile into working directory as our starting point
-		cp $mesa_dir/$cur_dir/LOGS/profile1.data.GYRE profile_cur.data.GYRE
+		cp $mesa_dir/$cur_dir/LOGS/profile${ip_ind}.data.GYRE profile_cur.data.GYRE
 
 		# calculate the moments of inertia for the (noninterpolated MESA models)
 		python calculate_Is.py $mesa_dir/$cur_dir/LOGS
@@ -47,7 +49,7 @@ do
 			fi
 
 			# update the orbital parameters in the gyre inlist
-			python update_orbital_parameters.py $i $cur_dir
+			python update_orbital_parameters.py $i $cur_dir $ip_ind
 
 			if ((i>1)); then
 				# get rid of the stellar profile before we get a fresh one
@@ -55,7 +57,7 @@ do
 				rm profile_cur.data.GYRE
 			fi
 			# update the stellar model in the working directory
-			python update_stellar_profile.py $i $cur_dir
+			python update_stellar_profile.py $i $cur_dir $ip_ind
 
 			# Calculate the orbtial evolution rates
 			$GYRE_DIR/bin/gyre_tides gyre_tides.in

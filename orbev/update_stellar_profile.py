@@ -9,6 +9,7 @@ def main():
 	# load command line arguments
 	pind=int(sys.argv[1])
 	cur_dir=sys.argv[2]
+	ip=int(sys.argv[3])
 
 	# Read stellar history file
 	base_sh_finame="/home/jared/MIT/astero/mesa_HATP2/live_planet/{}/LOGS/".format(cur_dir)
@@ -21,7 +22,7 @@ def main():
 
 	if pind==1:
 		# just use the first profile copied in the shell script
-		print("Starting with profile 1")
+		print("Starting with profile {}".format(ip))
 		return
 
 	# select the two profiles we will linearly interpolate between
@@ -66,7 +67,7 @@ def main():
 		header=header_mid
 
 	# interpolate and save current stellar moment of inertia
-	Is=np.loadtxt("{}/stellar_MOIs.txt".format(base_sh_finame))
+	Is=np.loadtxt(base_sh_finame+"stellar_MOIs.txt")
 	cur_I = lin_interp_2d(Is[pnum1], Is[pnum2], pct)
 	np.savetxt("current_stellar_MOI.txt", np.array([cur_I]))
 
