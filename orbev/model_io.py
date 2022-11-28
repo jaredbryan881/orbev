@@ -154,9 +154,9 @@ def update_orbital_parameters(OmegaOrb, OmegaRot, e, finame="gyre_tides.in"):
 	"""
 	with open(finame, "r+") as file:
 		text = file.read()
-		text = re.sub(r"Omega_orb=.*", "Omega_orb={0:.7f}".format(OmegaOrb), text)
-		text = re.sub(r"Omega_rot=.*", "Omega_rot={0:.7f}".format(OmegaRot), text)
-		text = re.sub(r"e=.*", "e={0:.7f}".format(e), text)
+		text = re.sub(r"Omega_orb=.*", "Omega_orb={}".format(OmegaOrb), text)
+		text = re.sub(r"Omega_rot=.*", "Omega_rot={}".format(OmegaRot), text)
+		text = re.sub(r"e=.*", "e={}".format(e), text)
 
 		file.seek(0)
 		file.write(text)
