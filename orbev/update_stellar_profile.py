@@ -5,6 +5,8 @@ from model_io import load_profile, save_profile, load_orbital_state
 from interpolate_profile import select_two_profiles, get_interpolation_axis, lin_interp_2d, interpolate_single_quantity
 import mesa_reader as mr
 
+import params
+
 def main():
 	# load command line arguments
 	pind=int(sys.argv[1])
@@ -12,7 +14,7 @@ def main():
 	ip=int(sys.argv[3])
 
 	# Read stellar history file
-	base_sh_finame="/home/jared/MIT/astero/mesa_HATP2/live_planet/{}/LOGS/".format(cur_dir)
+	base_sh_finame="{}/{}/LOGS/".format(params.mesa_diname, cur_dir)
 	sh_finame=base_sh_finame+"history.data"
 	sh=mr.MesaData(sh_finame)
 

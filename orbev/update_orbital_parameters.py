@@ -28,10 +28,10 @@ def main():
 	ip=int(sys.argv[3]) # initial profile index
 
 	# Read stellar history file
-	base_sh_finame="/home/jared/MIT/astero/mesa_HATP2/live_planet/{}/LOGS/".format(cur_dir)
+	base_sh_finame="{}/{}/LOGS/".format(params.mesa_diname, cur_dir)
 	sh_finame=base_sh_finame+"history.data"
 	sh=mr.MesaData(sh_finame)
-
+ 
 	# get stellar state from the current profile.data.GYRE
 	cur_R,cur_M=load_stellar_state("profile_cur.data.GYRE") # [cm], [g]
 	cur_R=cur_R/100/Rsun  # [Rsun]
@@ -39,7 +39,7 @@ def main():
 
 	if pind==1:
 		# Initialize orbital configuration in the GYRE inlist
-		update_orbital_parameters(params.OmegaOrb0, params.OmegaRot0, params.e0, params.finame)
+		update_orbital_parameters(params.OmegaOrb0, params.OmegaRot0, params.e0, params.gyre_inlist)
 		# Initialize orbital configuration history file
 		a0=OmegaOrb_to_a(params.OmegaOrb0, cur_M)
 		# initialize history file
@@ -79,9 +79,26 @@ def main():
 			I = MOI(profile["M"], profile["r"]) # Msun*Rsun^2
 		OmegaRotdot = Jdot/I # cyc/day/yr
 
-	# calculate the timestep
-	dt = np.min([np.abs(params.max_de/edot), np.abs(params.max_da/adot), np.abs(params.max_dOmegaRot/OmegaRotdot), params.max_dt])
-	new_time=cur_time+dt
+	if params.live_orbit:
+		# calculate the timestep
+		dt = np.min([np.abs(params.max_de/edot), np.abs(params.max_da/adot), np.abs(params.max_dOmegaRot/OmegaRotdot), params.max_dt])
+		new_time=cur_time+dt
+
+		# update e
+		new_e = e + dt*edot
+		# update a (and thus OmegaOrb)
+		new_a = a + dt*adot
+		new_OmegaOrb = a_to_OmegaOrb(new_a, cur_M)
+		# update OmegaRot
+		new_OmegaRot = cur_OmegaRot + dt*OmegaRotdot
+	else:
+		dt = params.max_dt
+		new_time = cur_time+dt
+
+		new_e = params.e0
+		new_a = OmegaOrb_to_a(params.OmegaOrb0, cur_M)
+		new_OmegaOrb = params.OmegaOrb0
+		new_OmegaRot = params.OmegaRot0
 
 	print("Time: {} Myr".format(cur_time/1e6))
 	print("dt = {} Myr".format(dt/1e6))
@@ -89,18 +106,10 @@ def main():
 	print("adot = {} au/yr; da={}".format(adot, dt*adot))
 	print("OmegaRotdot = {} cyc/day/yr; dOmegaRot={}".format(OmegaRotdot, dt*OmegaRotdot))
 
-	# update e
-	new_e = e + dt*edot
-	# update a (and thus OmegaOrb)
-	new_a = a + dt*adot
-	new_OmegaOrb = a_to_OmegaOrb(new_a, cur_M)
-	# update OmegaRot
-	new_OmegaRot = cur_OmegaRot + dt*OmegaRotdot
-
 	# update orbital_history.data
 	update_history(new_time, new_a, new_e, new_OmegaRot)
 	# update parameters in gyre_orbit.in
-	update_orbital_parameters(new_OmegaOrb, new_OmegaRot, new_e, params.finame)
+	update_orbital_parameters(new_OmegaOrb, new_OmegaRot, new_e, params.gyre_inlist)
 
 if __name__=="__main__":
 	main()
