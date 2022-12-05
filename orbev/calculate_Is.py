@@ -17,6 +17,7 @@ def main():
 		print("Stellar MOI file already exists")
 		return
 
+	print("Calculating Stellar MOIs")
 	n_files=sum([len([file for file in files if ('.data.GYRE' in file)]) for root, dirs, files in sorted(os.walk(base_finame))])
 	pinds = np.arange(1,1+n_files)
 	Is=np.zeros(len(pinds))
