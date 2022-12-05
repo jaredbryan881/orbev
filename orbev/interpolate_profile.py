@@ -2,6 +2,8 @@ import os
 import numpy as np
 from scipy import interpolate
 
+import ot
+
 def select_two_profiles(cur_time, all_times):
 	"""Get the indices of t1 and t2 in all_times such that t1 <= cur_time < t2
 
@@ -20,57 +22,71 @@ def select_two_profiles(cur_time, all_times):
 
 	return pnum1, pnum2
 
-def get_interpolation_axis(d1, d2, nbin=100):
-	"""Create a new radius axis to allow interpolation between d1 and d2.
+
+def get_interpolation_axis(r1, r2):
+	"""Create a new radial axis to allow interpolation between r1 and r2.
 
 	Arguments
 	---------
-	:param d1: dict
-		Dictionary of np.array data vectors
-	:param d2: dict
-		Dictionary of np.array data vectors
-	:param nbin: int
-		Number of bins over which the radius will be uniformly resampled
+	:param r1: np.array
+		Radial axis of the first stellar model
+	:param r2: np.array
+		Radial axis of the second stellar model
 
 	Returns
 	-------
 	:return r1: np.array
-		Radius of the first profile
+		Radial axis of the first stellar model with new sampling
 	:return r2: np.array
-		Radius of the second profile
+		Radial axis of the second stellar model with new sampling
 	"""
-	N1=len(d1["r"])
-	N2=len(d2["r"])
+	N1 = len(r1)
+	N2 = len(r2)
+	
+	# Check whether resampling is needed
+	if N1==N2:
+		return r1, r2
 
-	if N1!=N2:
-		# we want to resample the curves so they have the same number of points
-		# but the curves are variably sampled, so we want to respect sampling density.
+	# Define uniform distribution over points in radial axis
+	a=np.ones((N1,))/N1
+	b=np.ones((N2,))/N2
 
-		# First, let's calculate the density of the two curves
-		bins=np.linspace(0,1,nbin+1)
-		den1,_=np.histogram(d1["r"]/d1["r"].max(), bins)
-		den2,_=np.histogram(d2["r"]/d2["r"].max(), bins)
+	# TODO: combine these two cases by using dummy variables. Procedure is the same.
+	
+	# We want to resample both radii to the higher sampling case. So we check both cases.
+	if N1>N2:
+		# Calculate 1D transport map
+		p = ot.emd_1d(r1, r2, a, b)
+		# To prevent displacement of the stellar center and surface from their original locations
+		# we round to two decimal places. This makes the map more 1:1 at the endpoints.
+		p = np.around(N1*p, decimals=2)/N1
 
-		# Next, the easiest thing to do is just to resample both curves depending on whether
-		# it is denser or less dense in this bin. This means that the interpolated curve will
-		# always have more points than either of the end points.
-		N_bin_rs = np.max([den1, den2], axis=0)
+		# Create new radial axis for r2, where the position of the points in radius is given by
+		# the average location of points transported from r1. I.e. barycentric projection
+		r_interp=np.zeros(N1)
+		for i in range(N1):
+			nonzero = np.where(p[i,:]!=0)[0]
+			for loc in nonzero:
+				r_interp[i]+=N1*p[i,loc]*r2[loc]
 
-		r=np.zeros(N_bin_rs.sum())
-		ind=0
-		for i in range(nbin):
-			r[ind:ind+N_bin_rs[i]]=np.linspace(bins[i], bins[i+1], N_bin_rs[i])
-			ind+=N_bin_rs[i]
-		# stretch these back to their respective lengths
-		r1=r*d1["r"].max()
-		r2=r*d2["r"].max()
+		return r1, r_interp
 
-	else:
-		# no interpolation necessary
-		r1=d1["r"]
-		r2=d2["r"]
+	elif N2>N1:
+		# Calculate 1D transport map
+		p = ot.emd_1d(r2, r1, b, a)
+		# To prevent displacement of the stellar center and surface from their original locations
+		# we round to two decimal places. This makes the map more 1:1 at the endpoints.
+		p=np.around(N2*p, decimals=2)/N2
 
-	return r1, r2
+		# Create new radial axis for r1, where the position of the points in radius is given by
+		# the average location of points transported from r2. I.e. barycentric projection
+		r_interp=np.zeros(N2)
+		for i in range(N2):
+			nonzero = np.where(p[i,:]!=0)[0]
+			for loc in nonzero:
+				r_interp[i]+=N2*p[i,loc]*r1[loc]
+
+		return r_interp, r2
 
 def lin_interp_2d(d1,d2,pct):
 	"""Linearly interpolate some % between d1 and d2
@@ -110,8 +126,6 @@ def interpolate_single_quantity(r1, d1, r2, d2, pct, key):
 	:return d_mid: np.array
 		Data array pct between d1 and d2
 	"""
-	d_mid=np.zeros(len(r1))
-
 	f=interpolate.interp1d(d1["r"], d1[key])
 	d1_interp=f(r1)
 	f=interpolate.interp1d(d2["r"], d2[key])

@@ -35,22 +35,22 @@ def main():
 
 	# load profiles and their headers
 	if pct<0.001:
-		print("Loading profile {}".format(pnum1+1))
-		p,header=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum1+1))
+		print("Loading profile {}".format(pnum1))
+		p,header=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum1))
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
-		p,header=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2+1))
+		p,header=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2))
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	else:
-		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1+1, pnum2+1))
-		p1,header1=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum1+1))
-		p2,header2=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2+1))
-
+		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1, pnum2))
+		p1,header1=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum1))
+		p2,header2=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2))
+ 
 		p_mid={}
-		r1_interp,r2_interp=get_interpolation_axis(p1,p2,nbin=100000)
+		r1_interp,r2_interp=get_interpolation_axis(p1,p2)
 		for key in p1.keys():
 			if key=="ind":
 				p_mid["ind"]=np.arange(1,len(r1_interp)+1) # array starts at 1 in Fortran?
@@ -65,8 +65,6 @@ def main():
 
 		header_mid=np.array([[len(r1_interp), M_mid, R_mid, L_mid, int(101)]])
 		save_profile(p_mid, header_mid)
-		p=p_mid
-		header=header_mid
 
 	# interpolate and save current stellar moment of inertia
 	Is=np.loadtxt(base_sh_finame+"stellar_MOIs.txt")
