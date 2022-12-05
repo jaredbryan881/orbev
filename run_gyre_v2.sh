@@ -12,7 +12,8 @@ export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 Zs=(0.02)
 Ms=(1.40)
 
-ip_ind=10
+job_n=$1
+ip_ind=1
 
 for m in "${Ms[@]}"
 do
@@ -36,7 +37,7 @@ do
 		python calculate_Is.py $mesa_dir/$cur_dir/LOGS
 
 		# take some finite number of steps
-		for i in {1..100}
+		for i in {1..50000}
 		do
 			echo $i
 
@@ -49,7 +50,7 @@ do
 			fi
 
 			# update the orbital parameters in the gyre inlist
-			python update_orbital_parameters.py $i $cur_dir $ip_ind
+			python update_orbital_parameters.py $i $cur_dir $ip_ind $job_n
 
 			if ((i>1)); then
 				# get rid of the stellar profile before we get a fresh one
@@ -68,6 +69,15 @@ do
 			# move output files to profile directory
 			mkdir profile$i
 			mv tide_orbit.h5 profile$i/   # move forced oscillation summary
+
+			# break if the directory is empty
+			if [ "$(ls -A profile$i)" ]; then
+				echo "tide_orbit.h5 was stored successfully for profile$i"
+			else
+				echo "tide_orbit.h5 not created, exiting."
+				rmdir profile$i
+				break
+			fi
 		done
 
 		cd ..

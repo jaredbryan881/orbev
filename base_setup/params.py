@@ -1,14 +1,16 @@
+import numpy as np
+
 ###########
 # Toggles #
 ###########
-live_orbit=False
+live_orbit=True
 
 #################################
 # Initial Orbital Configuration #
 #################################
-e0 = 0.5        # []
-OmegaOrb0 = 0.1774 # [cyc/day]
-OmegaRot0 = OmegaOrb0*4.8 # [cyc/day]
+e0 = np.array([0.5])
+OmegaOrb0 = np.array([0.1774])
+OmegaRot0 = np.array([0.1774])*4.8
 
 #################
 # Update limits #
