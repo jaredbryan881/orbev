@@ -26,6 +26,7 @@ def main():
 	pind=int(sys.argv[1])
 	cur_dir=sys.argv[2]
 	ip=int(sys.argv[3]) # initial profile index
+	cur_param_ind=int(sys.argv[4])
 
 	# Read stellar history file
 	base_sh_finame="{}/{}/LOGS/".format(params.mesa_diname, cur_dir)
@@ -39,11 +40,11 @@ def main():
 
 	if pind==1:
 		# Initialize orbital configuration in the GYRE inlist
-		update_orbital_parameters(params.OmegaOrb0, params.OmegaRot0, params.e0, params.gyre_inlist)
+		update_orbital_parameters(params.OmegaOrb0[cur_param_ind], params.OmegaRot0[cur_param_ind], params.e0[cur_param_ind], params.gyre_inlist)
 		# Initialize orbital configuration history file
-		a0=OmegaOrb_to_a(params.OmegaOrb0, cur_M)
+		a0=OmegaOrb_to_a(params.OmegaOrb0[cur_param_ind], cur_M)
 		# initialize history file
-		update_history(sh.star_age[ip], a0, params.e0, params.OmegaRot0)
+		update_history(sh.star_age[ip], a0, params.e0[cur_param_ind], params.OmegaRot0[cur_param_ind])
 		return
 
 	# Read orbital configuration
@@ -95,10 +96,10 @@ def main():
 		dt = params.max_dt
 		new_time = cur_time+dt
 
-		new_e = params.e0
-		new_a = OmegaOrb_to_a(params.OmegaOrb0, cur_M)
-		new_OmegaOrb = params.OmegaOrb0
-		new_OmegaRot = params.OmegaRot0
+		new_e = params.e0[cur_param_ind]
+		new_a = OmegaOrb_to_a(params.OmegaOrb0[cur_param_ind], cur_M)
+		new_OmegaOrb = params.OmegaOrb0[cur_param_ind]
+		new_OmegaRot = params.OmegaRot0[cur_param_ind]
 
 	print("Time: {} Myr".format(cur_time/1e6))
 	print("dt = {} Myr".format(dt/1e6))
