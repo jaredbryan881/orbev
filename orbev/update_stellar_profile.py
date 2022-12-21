@@ -28,7 +28,7 @@ def main():
 		return
 
 	# select the two profiles we will linearly interpolate between
-	pnum1, pnum2 = select_two_profiles(cur_time, sh.star_age)
+	pnum1, pnum2 = select_two_profiles(cur_time, sh.star_age, params.allowable_profiles)
 
 	# distance between two profiles
 	pct=(cur_time-sh.star_age[pnum1])/(sh.star_age[pnum2]-sh.star_age[pnum1])
@@ -50,7 +50,7 @@ def main():
 		p2,header2=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2))
  
 		p_mid={}
-		r1_interp,r2_interp=get_interpolation_axis(p1,p2)
+		r1_interp,r2_interp=get_interpolation_axis(p1["r"],p2["r"])
 		for key in p1.keys():
 			if key=="ind":
 				p_mid["ind"]=np.arange(1,len(r1_interp)+1) # array starts at 1 in Fortran?

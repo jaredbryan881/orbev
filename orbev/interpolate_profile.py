@@ -1,10 +1,9 @@
 import os
 import numpy as np
 from scipy import interpolate
-
 import ot
 
-def select_two_profiles(cur_time, all_times):
+def select_two_profiles(cur_time, all_times, allowable_profiles):
 	"""Get the indices of t1 and t2 in all_times such that t1 <= cur_time < t2
 
 	Arguments
@@ -13,12 +12,31 @@ def select_two_profiles(cur_time, all_times):
 		Current star age [yr]
 	:param all_times: np.array
 		Array of star ages from the MESA model [yr]
-	"""
-	pnum2 = np.argmin(all_times<cur_time)
-	pnum1 = pnum2-1
+	:param allowable_profiles: list
+		List of indices identifying the subset of all profiles which may be selected from
 
-	if cur_time<all_times[pnum1]:
-		cur_time=all_times[pnum1]
+	Returns
+	-------
+	:return pnum1: int
+		Index of first profile
+	:return pnum2: int
+		Index of second profile
+	"""
+	# get indices of each profile
+	pnums=np.array([pnum for pnum in range(len(all_times))])
+	# mask out disallowed profiles
+	allowable_mask=np.isin(pnums, allowable_profiles)
+	# mask out future values
+	past_mask = all_times<=cur_time # technically the past and present...
+
+	# get index of last allowed profile with time < cur_time
+	# last instance of allowable_mask ^ past_mask
+	pnum1 = np.where(allowable_mask*past_mask==1)[0][-1]
+	# get index of first allowed profile with time > cur_time
+	# first instance of allowable_mask ^ ~past_mask
+	pnum2 = np.where(allowable_mask*~past_mask==1)[0][0]
+
+	assert pnum2>pnum1, "profile 2 must follow profile 1, but order is reversed"
 
 	return pnum1, pnum2
 

@@ -5,7 +5,7 @@ conda activate astero
 # directory containing template gyre inlists
 base_dir="/home/jared/MIT/astero/gyre_HATP2/orbev/base_setup"
 # directory containing the MESA stellar profiles
-mesa_dir="/home/jared/MIT/astero/mesa_HATP2/live_planet"
+mesa_dir="/home/jared/MIT/astero/gyre_HATP2/benchmarking/profiles"
 # GYRE directory (with GYRE-tides enabled)
 export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 
@@ -13,7 +13,7 @@ Zs=(0.02)
 Ms=(1.40)
 
 job_n=$1
-ip_ind=1
+ip_ind=11700
 
 for m in "${Ms[@]}"
 do
@@ -29,6 +29,7 @@ do
 
 		# copy the initial orbital conditions and update parameters
 		cp ../base_setup/params.py .
+		python params.py $job_n
 
 		# copy the first profile into working directory as our starting point
 		cp $mesa_dir/$cur_dir/LOGS/profile${ip_ind}.data.GYRE profile_cur.data.GYRE
