@@ -4,18 +4,19 @@ import numpy as np
 # Toggles #
 ###########
 live_orbit=False
+time_reversed=True
 
 #################################
 # Initial Orbital Configuration #
 #################################
-e0 = np.array([0.5])
-OmegaOrb0 = np.array([0.1774])
-OmegaRot0 = np.array([0.1774])*4.8
+e0 = np.array([0.5]*50)
+OmegaOrb0 = np.array([0.1774]*50)
+OmegaRot0 = np.array([0.1774]*50)*4.8
 
 #################
 # Update limits #
 #################
-max_dt=1e5         # [yr]
+max_dt=1e4         # [yr]
 max_de=1e-5        # []
 max_da=1e-5        # [au]
 max_dOmegaRot=1e-5 # [cyc/day]
@@ -25,10 +26,10 @@ max_dOmegaRot=1e-5 # [cyc/day]
 #######################
 gyre_inlist="./gyre_tides.in"
 #gyre_inlist="./gyre_orbit.in"
-mesa_diname="/home/jared/MIT/astero/gyre_HATP2/benchmarking/profiles"
+mesa_diname="/home/jared/MIT/astero/mesa_HATP2/live_planet"
 
 # subset of profiles which can be selected from
-allowable_profiles=np.arange(11700,11800,2)
+allowable_profiles=np.arange(1,1001,1)
 
 def main():
 	import sys

@@ -80,22 +80,29 @@ def main():
 			I = MOI(profile["M"], profile["r"]) # Msun*Rsun^2
 		OmegaRotdot = Jdot/I # cyc/day/yr
 
+	# calculate the timestep and update orbital parameters
 	if params.live_orbit:
 		# calculate the timestep
 		dt = np.min([np.abs(params.max_de/edot), np.abs(params.max_da/adot), np.abs(params.max_dOmegaRot/OmegaRotdot), params.max_dt])
+		# step backward in time if time-reversed simulation
+		if params.time_reversed:
+			dt=-dt
 		new_time=cur_time+dt
 
-		# update e
+		# update orbital parameters
 		new_e = e + dt*edot
-		# update a (and thus OmegaOrb)
 		new_a = a + dt*adot
 		new_OmegaOrb = a_to_OmegaOrb(new_a, cur_M)
-		# update OmegaRot
 		new_OmegaRot = cur_OmegaRot + dt*OmegaRotdot
 	else:
+		# take fixed timestep
 		dt = params.max_dt
+		# step backward in time if time-reversed simulation
+		if params.time_reversed:
+			dt=-dt
 		new_time = cur_time+dt
 
+		# update orbital parameters
 		new_e = params.e0[cur_param_ind]
 		new_a = OmegaOrb_to_a(params.OmegaOrb0[cur_param_ind], cur_M)
 		new_OmegaOrb = params.OmegaOrb0[cur_param_ind]
