@@ -1,10 +1,11 @@
 import os
 import numpy as np
 from scipy import interpolate
+
 import ot
 
-def select_two_profiles(cur_time, all_times, allowable_profiles):
-	"""Get the indices of t1 and t2 in all_times such that t1 <= cur_time < t2
+def select_profiles(cur_time, all_times, allowable_profiles, n_profiles):
+	"""Get the indices of the N time samples in all_times closest to cur_time
 
 	Arguments
 	---------
@@ -14,32 +15,27 @@ def select_two_profiles(cur_time, all_times, allowable_profiles):
 		Array of star ages from the MESA model [yr]
 	:param allowable_profiles: list
 		List of indices identifying the subset of all profiles which may be selected from
+	:param n_profiles: int
+		Number of nearest profiles to return
 
 	Returns
 	-------
-	:return pnum1: int
-		Index of first profile
-	:return pnum2: int
-		Index of second profile
+	:return pnums: list
+		List of indices of nearest profiles in time to cur_time
 	"""
 	# get indices of each profile
-	pnums=np.array([pnum for pnum in range(len(all_times))])
+	pnums=np.array([pnum for pnum in range(1,len(all_times)+1)])
 	# mask out disallowed profiles
 	allowable_mask=np.isin(pnums, allowable_profiles)
-	# mask out future values
-	past_mask = all_times<=cur_time # technically the past and present...
 
-	# get index of last allowed profile with time < cur_time
-	# last instance of allowable_mask ^ past_mask
-	pnum1 = np.where(allowable_mask*past_mask==1)[0][-1]
-	# get index of first allowed profile with time > cur_time
-	# first instance of allowable_mask ^ ~past_mask
-	pnum2 = np.where(allowable_mask*~past_mask==1)[0][0]
-
-	assert pnum2>pnum1, "profile 2 must follow profile 1, but order is reversed"
-
-	return pnum1, pnum2
-
+	# get closest n profiles in time
+	dt_prof=np.abs(all_times - cur_time)
+	pnums_sort_inds=np.argsort(dt_prof) # order indices by proximity to cur_time
+	pnums_sort_inds=pnums_sort_inds[allowable_mask[pnums_sort_inds]] # filter sorted indices to just the allowable ones
+	selected_pnums=pnums_sort_inds[:n_profiles] # take first n_profiles from the sorted indices
+	selected_pnums=np.sort(selected_pnums) # finally, just put those selected_pnums in order
+	
+	return selected_pnums
 
 def get_interpolation_axis(r1, r2):
 	"""Create a new radial axis to allow interpolation between r1 and r2.

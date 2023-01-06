@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 from model_io import load_profile, save_profile, load_orbital_state
-from interpolate_profile import select_two_profiles, get_interpolation_axis, lin_interp_2d, interpolate_single_quantity
+from interpolate_profile import select_two_profiles, select_profiles, get_interpolation_axis, lin_interp_2d, interpolate_single_quantity
 import mesa_reader as mr
 
 import params
@@ -28,7 +28,7 @@ def main():
 		return
 
 	# select the two profiles we will linearly interpolate between
-	pnum1, pnum2 = select_two_profiles(cur_time, sh.star_age, params.allowable_profiles)
+	pnum1, pnum2 = select_profiles(cur_time, sh.star_age, params.allowable_profiles, params.n_profiles)
 
 	# distance between two profiles
 	pct=(cur_time-sh.star_age[pnum1])/(sh.star_age[pnum2]-sh.star_age[pnum1])
