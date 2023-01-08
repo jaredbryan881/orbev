@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from scipy import interpolate
+from scipy.interpolate import interp1d, make_interp_spline
 
 import ot
 
@@ -30,122 +30,156 @@ def select_profiles(cur_time, all_times, allowable_profiles, n_profiles):
 
 	# get closest n profiles in time
 	dt_prof=np.abs(all_times - cur_time)
-	pnums_sort_inds=np.argsort(dt_prof) # order indices by proximity to cur_time
-	pnums_sort_inds=pnums_sort_inds[allowable_mask[pnums_sort_inds]] # filter sorted indices to just the allowable ones
-	selected_pnums=pnums_sort_inds[:n_profiles] # take first n_profiles from the sorted indices
-	selected_pnums=np.sort(selected_pnums) # finally, just put those selected_pnums in order
+	# order indices by proximity to cur_time
+	pnums_sort_inds=np.argsort(dt_prof)
+	# filter sorted indices to just the allowable ones
+	pnums_sort_inds=pnums_sort_inds[allowable_mask[pnums_sort_inds]]
+	# take first n_profiles from the sorted indices
+	selected_pnums=pnums_sort_inds[:n_profiles]
+	# finally, just put those selected_pnums in order
+	selected_pnums=np.sort(selected_pnums)
 	
 	return selected_pnums
 
-def get_interpolation_axis(r1, r2):
+def get_interpolation_axes(rs):
 	"""Create a new radial axis to allow interpolation between r1 and r2.
 
 	Arguments
 	---------
-	:param r1: np.array
-		Radial axis of the first stellar model
-	:param r2: np.array
-		Radial axis of the second stellar model
+	:param rs: list
+		Radial axis of each stellar model used in the current interpolation
 
 	Returns
 	-------
-	:return r1: np.array
-		Radial axis of the first stellar model with new sampling
-	:return r2: np.array
-		Radial axis of the second stellar model with new sampling
+	:return rs_interp: list
+		Radial axis with new sampling of each stellar model used in the current interpolation
 	"""
-	N1 = len(r1)
-	N2 = len(r2)
-	
 	# Check whether resampling is needed
-	if N1==N2:
-		return r1, r2
+	Ns = [len(r) for r in rs]
+	if len(set(Ns))==1:
+		return rs
 
-	# Define uniform distribution over points in radial axis
-	a=np.ones((N1,))/N1
-	b=np.ones((N2,))/N2
+	# The plan is to choose the profile with the most samples
+	# then approximate every other profile at the higher sampling
+	# by cascading Monge mappings (via barycentric projection of Kantorovich plans)
+	max_ind=np.argmax(Ns)
 
-	# TODO: combine these two cases by using dummy variables. Procedure is the same.
-	
-	# We want to resample both radii to the higher sampling case. So we check both cases.
-	if N1>N2:
-		# Calculate 1D transport map
-		p = ot.emd_1d(r1, r2, a, b)
-		# To prevent displacement of the stellar center and surface from their original locations
-		# we round to two decimal places. This makes the map more 1:1 at the endpoints.
-		p = np.around(N1*p, decimals=2)/N1
+	# initialize rs list with the largest one
+	rs_interp=[rs[max_ind]]
 
-		# Create new radial axis for r2, where the position of the points in radius is given by
-		# the average location of points transported from r1. I.e. barycentric projection
-		r_interp=np.zeros(N1)
-		for i in range(N1):
-			nonzero = np.where(p[i,:]!=0)[0]
-			for loc in nonzero:
-				r_interp[i]+=N1*p[i,loc]*r2[loc]
+	# first cascade Monge maps backward in time
+	for i in range(max_ind-1,-1,-1):
+		N1=Ns[i]
+		N2=len(rs_interp[0])
 
-		return r1, r_interp
+		# Define uniform distribution over points in radial axis
+		a=np.ones((N1,))/N1
+		b=np.ones((N2,))/N2
 
-	elif N2>N1:
-		# Calculate 1D transport map
-		p = ot.emd_1d(r2, r1, b, a)
-		# To prevent displacement of the stellar center and surface from their original locations
-		# we round to two decimal places. This makes the map more 1:1 at the endpoints.
-		p=np.around(N2*p, decimals=2)/N2
+		if N1==N2:
+			# just keep the existing radial axis if it has the same sampling
+			rs_interp.insert(0,rs[i])
+		else:
+			# Calculate 1D transport map
+			p = ot.emd_1d(rs_interp[0], rs[i], b, a)
+			# To prevent displacement of the stellar center and surface from their original locations
+			# we round to two decimal places. This makes the map more 1:1 at the endpoints.
+			p=np.around(N2*p, decimals=2)/N2
 
-		# Create new radial axis for r1, where the position of the points in radius is given by
-		# the average location of points transported from r2. I.e. barycentric projection
-		r_interp=np.zeros(N2)
-		for i in range(N2):
-			nonzero = np.where(p[i,:]!=0)[0]
-			for loc in nonzero:
-				r_interp[i]+=N2*p[i,loc]*r1[loc]
+			# Create new radial axis for r1, where the position of the points in radius is given by
+			# the average location of points transported from r2. I.e. barycentric projection
+			# approximation of the Monge map 
+			r_monge=np.zeros(N2)
+			for j in range(N2):
+				nonzero = np.where(p[j,:]!=0)[0]
+				for loc in nonzero:
+					r_monge[j]+=N2*p[j,loc]*rs_interp[0][loc]
+			rs_interp.insert(0,r_monge)
 
-		return r_interp, r2
+	# next cascade Monge maps forward in time
+	for i in range(max_ind+1,len(Ns)):
+		N1=len(rs_interp[-1])
+		N2=len(rs[i])
 
-def lin_interp_2d(d1,d2,pct):
-	"""Linearly interpolate some % between d1 and d2
+		# Define uniform distribution over points in radial axis
+		a=np.ones((N1,))/N1
+		b=np.ones((N2,))/N2
+
+		if N1==N2:
+			# just keep the existing radial axis if it has the same sampling
+			rs_interp.append(rs[i])
+		else:
+			# Calculate 1D transport map
+			p = ot.emd_1d(rs_interp[-1], rs[i], a, b)
+			# To prevent displacement of the stellar center and surface from their original locations
+			# we round to two decimal places. This makes the map more 1:1 at the endpoints.
+			p=np.around(N1*p, decimals=2)/N1
+
+			# Create new radial axis for r1, where the position of the points in radius is given by
+			# the average location of points transported from r2. I.e. barycentric projection
+			# approximation of the Monge map 
+			r_monge=np.zeros(N1)
+			for j in range(N1):
+				nonzero = np.where(p[j,:]!=0)[0]
+				for loc in nonzero:
+					r_monge[j]+=N1*p[j,loc]*rs_interp[-1][loc]
+			rs_interp.insert(0,r_monge)
+
+	return rs_interp
+
+def resample_profiles(rs, ps):
+	"""Resample radial profiles
 
 	Arguments
 	---------
-	:param d1: np.array
+	:param rs: list
+		Radial axes to which the profiles will be resampled
+	:param ps: list
+		List of dicts, each dict has radial profiles of several quantities to be resampled
+
+	Returns
+	-------
+	:return ps_interp: list
+		List of dicts containing profiles now resampled to rs
+	"""
+	ps_interp=[]
+	for (i,p) in enumerate(ps):
+		p_interp_cur={}
+		# resample each quantity's radial profile to the current r
+		for key in p.keys():
+			f=interp1d(ps[i]["r"], ps[i][key])
+			p_interp_cur[key]=f(rs[i])
+		ps_interp.append(p_interp_cur)
+	return ps_interp
+
+def interp_2d(ps, cur_time, all_times, spline_order):
+	"""Perform cubic spline interpolation on a 
+
+	Arguments
+	---------
+	:param rs: list
 		First data vector
-	:param d2: np.array
+	:param ps: list
 		Second data vector
-	:param pct: float
-		Percentage of the way between d1 and d2
+	:param cur_time: np.array
+		First data vector
+	:param all_times: np.array
+		Second data vector
+	:param spline_order: int
+		B-spline degree
 
 	Returns
 	-------
 	:return d_mid: np.array
 		Data vector some % between d1 and d2
 	"""
-	return (1-pct)*d1 + (pct)*d2
+	# turn ps into a 2d array
+	ps=np.array(ps)
 
-def interpolate_single_quantity(r1, d1, r2, d2, pct, key):
-	"""Interpolate between two curves with the same number of points.
+	# perform cubic spline interpolation
+	f = make_interp_spline(all_times, ps, k=spline_order, axis=0)
 
-	Arguments
-	---------
-	:param r: np.array
-		Radius
-	:param d1: np.array
-		First data array
-	:param d2: np.array
-		Second data array
-	:param pct: float
-		A value between 0 and 1 representing the distance between d1 and d2
+	# interpolate profile at cur_time
+	p_interp=f(cur_time)
 
-	Returns
-	-------
-	:return d_mid: np.array
-		Data array pct between d1 and d2
-	"""
-	f=interpolate.interp1d(d1["r"], d1[key])
-	d1_interp=f(r1)
-	f=interpolate.interp1d(d2["r"], d2[key])
-	d2_interp=f(r2)
-
-	# simple linear interpolation
-	d_mid=lin_interp_2d(d1_interp, d2_interp, pct)
-
-	return d_mid
+	return p_interp

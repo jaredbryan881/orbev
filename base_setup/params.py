@@ -30,8 +30,8 @@ mesa_diname="/home/jared/MIT/astero/mesa_HATP2/live_planet"
 
 # subset of profiles which can be selected from
 allowable_profiles=np.arange(1,1001,3)
-n_profiles=2
-poly_order=3
+n_profiles=50
+spline_order=3
 
 def main():
 	import sys
