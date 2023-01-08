@@ -54,7 +54,7 @@ def main():
 		profiles=[]
 		headers=[]
 		for pnum in selected_pnums:
-			p, h = load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum))
+			p, h = load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum+1))
 			profiles.append(p)
 			headers.append(h)
 

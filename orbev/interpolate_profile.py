@@ -93,7 +93,10 @@ def get_interpolation_axes(rs):
 			for j in range(N2):
 				nonzero = np.where(p[j,:]!=0)[0]
 				for loc in nonzero:
-					r_monge[j]+=N2*p[j,loc]*rs_interp[0][loc]
+					r_monge[j]+=N1*p[j,loc]*rs_interp[0][loc]
+			r_monge/=r_monge.max()
+			r_monge*=rs[i].max()
+
 			rs_interp.insert(0,r_monge)
 
 	# next cascade Monge maps forward in time
@@ -122,8 +125,11 @@ def get_interpolation_axes(rs):
 			for j in range(N1):
 				nonzero = np.where(p[j,:]!=0)[0]
 				for loc in nonzero:
-					r_monge[j]+=N1*p[j,loc]*rs_interp[-1][loc]
-			rs_interp.insert(0,r_monge)
+					r_monge[j]+=N2*p[j,loc]*rs_interp[-1][loc]
+			r_monge/=r_monge.max()
+			r_monge*=rs[i].max()
+
+			rs_interp.append(r_monge)
 
 	return rs_interp
 
@@ -147,8 +153,13 @@ def resample_profiles(rs, ps):
 		p_interp_cur={}
 		# resample each quantity's radial profile to the current r
 		for key in p.keys():
-			f=interp1d(ps[i]["r"], ps[i][key])
-			p_interp_cur[key]=f(rs[i])
+			if key=="ind":
+				p_interp_cur["ind"]=np.arange(1,len(rs[i])+1)
+			elif key=="r":
+				p_interp_cur["r"]=rs[i]
+			else:
+				f=interp1d(ps[i]["r"], ps[i][key])
+				p_interp_cur[key]=f(rs[i])
 		ps_interp.append(p_interp_cur)
 	return ps_interp
 
