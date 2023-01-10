@@ -20,7 +20,7 @@ def select_profiles(cur_time, all_times, allowable_profiles, n_profiles):
 
 	Returns
 	-------
-	:return pnums: list
+	:return selected_pnums: list
 		List of indices of nearest profiles in time to cur_time
 	"""
 	# get indices of each profile
@@ -57,6 +57,7 @@ def get_interpolation_axes(rs):
 	# Check whether resampling is needed
 	Ns = [len(r) for r in rs]
 	if len(set(Ns))==1:
+		print("No resampling needed.")
 		return rs
 
 	# The plan is to choose the profile with the most samples
@@ -168,10 +169,8 @@ def interp_2d(ps, cur_time, all_times, spline_order):
 
 	Arguments
 	---------
-	:param rs: list
-		First data vector
 	:param ps: list
-		Second data vector
+		Data vectors at all_times
 	:param cur_time: np.array
 		First data vector
 	:param all_times: np.array
@@ -181,8 +180,8 @@ def interp_2d(ps, cur_time, all_times, spline_order):
 
 	Returns
 	-------
-	:return d_mid: np.array
-		Data vector some % between d1 and d2
+	:return p_interp: np.array
+		Data vector at cur_time
 	"""
 	# turn ps into a 2d array
 	ps=np.array(ps)
