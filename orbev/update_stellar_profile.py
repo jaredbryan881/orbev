@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 from model_io import load_profile, save_profile, load_orbital_state
-from interpolate_profile import select_profiles, get_interpolation_axes, resample_profiles, interp_2d
+from interpolate_profile import select_profiles, resample_radial_axes, resample_profiles, interp_2d
 import mesa_reader as mr
 
 import params
@@ -60,7 +60,7 @@ def main():
 
 		# get each profiles in selected_profiles to have the same number of samples
 		# done by finding the profile with the most samples and cascading Monge maps to couple each profile
-		rs_interp = get_interpolation_axes([p["r"] for p in profiles])
+		rs_interp = resample_radial_axes([p["r"] for p in profiles])
 		profiles_interp = resample_profiles(rs_interp, profiles)
 
 		p_mid={}

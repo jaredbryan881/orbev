@@ -41,8 +41,12 @@ def select_profiles(cur_time, all_times, allowable_profiles, n_profiles):
 	
 	return selected_pnums
 
-def get_interpolation_axes(rs):
+def resample_radial_axes(rs):
 	"""Create a new radial axis to allow interpolation between r1 and r2.
+
+	The plan is to choose the profile with the most samples
+	then approximate every other profile at the higher sampling
+	by cascading Monge mappings (via barycentric projection of Kantorovich plans)
 
 	Arguments
 	---------
@@ -59,80 +63,54 @@ def get_interpolation_axes(rs):
 	if len(set(Ns))==1:
 		print("No resampling needed.")
 		return rs
+	print("Resampling {} profiles to {} samples".format(len(Ns), np.max(Ns)))
 
-	# The plan is to choose the profile with the most samples
-	# then approximate every other profile at the higher sampling
-	# by cascading Monge mappings (via barycentric projection of Kantorovich plans)
+	# choose the profile with the most samples
 	max_ind=np.argmax(Ns)
 
-	# initialize rs list with the largest one
+	# initialize list with the radial axis with the most samples
 	rs_interp=[rs[max_ind]]
 
 	# first cascade Monge maps backward in time
 	for i in range(max_ind-1,-1,-1):
-		N1=Ns[i]
-		N2=len(rs_interp[0])
-
-		# Define uniform distribution over points in radial axis
-		a=np.ones((N1,))/N1
-		b=np.ones((N2,))/N2
-
-		if N1==N2:
-			# just keep the existing radial axis if it has the same sampling
-			rs_interp.insert(0,rs[i])
-		else:
-			# Calculate 1D transport map
-			p = ot.emd_1d(rs_interp[0], rs[i], b, a)
-			# To prevent displacement of the stellar center and surface from their original locations
-			# we round to two decimal places. This makes the map more 1:1 at the endpoints.
-			p=np.around(N2*p, decimals=2)/N2
-
-			# Create new radial axis for r1, where the position of the points in radius is given by
-			# the average location of points transported from r2. I.e. barycentric projection
-			# approximation of the Monge map 
-			r_monge=np.zeros(N2)
-			for j in range(N2):
-				nonzero = np.where(p[j,:]!=0)[0]
-				for loc in nonzero:
-					r_monge[j]+=N1*p[j,loc]*rs_interp[0][loc]
-			r_monge/=r_monge.max()
-			r_monge*=rs[i].max()
-
-			rs_interp.insert(0,r_monge)
+		r_monge = apply_transport_map(rs_interp[0], rs[i])
+		rs_interp.insert(0,r_monge)
 
 	# next cascade Monge maps forward in time
 	for i in range(max_ind+1,len(Ns)):
-		N1=len(rs_interp[-1])
-		N2=len(rs[i])
+		r_monge = apply_transport_map(rs_interp[-1], rs[i])
+		rs_interp.append(r_monge)
 
-		# Define uniform distribution over points in radial axis
+	return rs_interp
+
+def apply_transport_map(r1,r2):
+	N1=len(r1)
+	N2=len(r2)
+
+	if N1==N2:
+		return r2
+	else:
+		# define uniform distributions over radial samples
 		a=np.ones((N1,))/N1
 		b=np.ones((N2,))/N2
 
-		if N1==N2:
-			# just keep the existing radial axis if it has the same sampling
-			rs_interp.append(rs[i])
-		else:
-			# Calculate 1D transport map
-			p = ot.emd_1d(rs_interp[-1], rs[i], a, b)
-			# To prevent displacement of the stellar center and surface from their original locations
-			# we round to two decimal places. This makes the map more 1:1 at the endpoints.
-			p=np.around(N1*p, decimals=2)/N1
+		# Calculate 1D transport map
+		p = ot.emd_1d(r1, r2, a, b)
 
-			# Create new radial axis for r1, where the position of the points in radius is given by
-			# the average location of points transported from r2. I.e. barycentric projection
-			# approximation of the Monge map 
-			r_monge=np.zeros(N1)
-			for j in range(N1):
-				nonzero = np.where(p[j,:]!=0)[0]
-				for loc in nonzero:
-					r_monge[j]+=N2*p[j,loc]*rs_interp[-1][loc]
-			r_monge/=r_monge.max()
-			r_monge*=rs[i].max()
+		# To prevent displacement of the stellar center and surface from their original locations
+		# we round to two decimal places. This makes the map more 1:1 at the endpoints.
+		p=np.around(N1*p, decimals=2)/N1
 
-			rs_interp.append(r_monge)
+		# Create new radial axis for r2, where the position of the points in radius is given by
+		# the average location of points transported from r1 to r2.
+		# i.e. perform barycentric projection of the Kantorovich plan to approximate the Monge map 
+		r_monge=np.zeros(N1)
+		for i in range(N1):
+			# consider contributions of points which accept nonzero mass
+			for loc in np.where(p[i,:]!=0)[0]: 
+				r_monge[i]+=N1*p[i,loc]*r2[loc]
 
-	return rs_interp
+		return r_monge
 
 def resample_profiles(rs, ps):
 	"""Resample radial profiles
@@ -190,6 +168,6 @@ def interp_2d(ps, cur_time, all_times, spline_order):
 	f = make_interp_spline(all_times, ps, k=spline_order, axis=0)
 
 	# interpolate profile at cur_time
-	p_interp=f(cur_time)
+	p_interp=f(cur_time) 
 
 	return p_interp
