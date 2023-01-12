@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from scipy.interpolate import interp1d, make_interp_spline
+from scipy.interpolate import interp1d
 
 import ot
 
@@ -41,133 +41,109 @@ def select_profiles(cur_time, all_times, allowable_profiles, n_profiles):
 	
 	return selected_pnums
 
-def resample_radial_axes(rs):
+def get_interpolation_axis(r1, r2):
 	"""Create a new radial axis to allow interpolation between r1 and r2.
-
-	The plan is to choose the profile with the most samples
-	then approximate every other profile at the higher sampling
-	by cascading Monge mappings (via barycentric projection of Kantorovich plans)
-
 	Arguments
 	---------
-	:param rs: list
-		Radial axis of each stellar model used in the current interpolation
-
+	:param r1: np.array
+		Radial axis of the first stellar model
+	:param r2: np.array
+		Radial axis of the second stellar model
 	Returns
 	-------
-	:return rs_interp: list
-		Radial axis with new sampling of each stellar model used in the current interpolation
+	:return r1: np.array
+		Radial axis of the first stellar model with new sampling
+	:return r2: np.array
+		Radial axis of the second stellar model with new sampling
 	"""
+	N1 = len(r1)
+	N2 = len(r2)
+	
 	# Check whether resampling is needed
-	Ns = [len(r) for r in rs]
-	if len(set(Ns))==1:
-		print("No resampling needed.")
-		return rs
-	print("Resampling {} profiles to {} samples".format(len(Ns), np.max(Ns)))
-
-	# choose the profile with the most samples
-	max_ind=np.argmax(Ns)
-
-	# initialize list with the radial axis with the most samples
-	rs_interp=[rs[max_ind]]
-
-	# first cascade Monge maps backward in time
-	for i in range(max_ind-1,-1,-1):
-		r_monge = apply_transport_map(rs_interp[0], rs[i])
-		rs_interp.insert(0,r_monge)
-
-	# next cascade Monge maps forward in time
-	for i in range(max_ind+1,len(Ns)):
-		r_monge = apply_transport_map(rs_interp[-1], rs[i])
-		rs_interp.append(r_monge)
-
-	return rs_interp
-
-def apply_transport_map(r1,r2):
-	N1=len(r1)
-	N2=len(r2)
-
 	if N1==N2:
-		return r2
-	else:
-		# define uniform distributions over radial samples
-		a=np.ones((N1,))/N1
-		b=np.ones((N2,))/N2
+		return r1, r2
 
+	# Define uniform distribution over points in radial axis
+	a=np.ones((N1,))/N1
+	b=np.ones((N2,))/N2
+
+	# TODO: combine these two cases by using dummy variables. Procedure is the same.
+	
+	# We want to resample both radii to the higher sampling case. So we check both cases.
+	if N1>N2:
 		# Calculate 1D transport map
 		p = ot.emd_1d(r1, r2, a, b)
-
 		# To prevent displacement of the stellar center and surface from their original locations
 		# we round to two decimal places. This makes the map more 1:1 at the endpoints.
-		p=np.around(N1*p, decimals=2)/N1
+		p = np.around(N1*p, decimals=2)/N1
 
 		# Create new radial axis for r2, where the position of the points in radius is given by
-		# the average location of points transported from r1 to r2.
-		# i.e. perform barycentric projection of the Kantorovich plan to approximate the Monge map 
-		r_monge=np.zeros(N1)
+		# the average location of points transported from r1. I.e. barycentric projection
+		r_interp=np.zeros(N1)
 		for i in range(N1):
-			# consider contributions of points which accept nonzero mass
-			for loc in np.where(p[i,:]!=0)[0]: 
-				r_monge[i]+=N1*p[i,loc]*r2[loc]
+			nonzero = np.where(p[i,:]!=0)[0]
+			for loc in nonzero:
+				r_interp[i]+=N1*p[i,loc]*r2[loc]
 
-		return r_monge
+		return r1, r_interp
 
-def resample_profiles(rs, ps):
-	"""Resample radial profiles
+	elif N2>N1:
+		# Calculate 1D transport map
+		p = ot.emd_1d(r2, r1, b, a)
+		# To prevent displacement of the stellar center and surface from their original locations
+		# we round to two decimal places. This makes the map more 1:1 at the endpoints.
+		p=np.around(N2*p, decimals=2)/N2
 
+		# Create new radial axis for r1, where the position of the points in radius is given by
+		# the average location of points transported from r2. I.e. barycentric projection
+		r_interp=np.zeros(N2)
+		for i in range(N2):
+			nonzero = np.where(p[i,:]!=0)[0]
+			for loc in nonzero:
+				r_interp[i]+=N2*p[i,loc]*r1[loc]
+
+		return r_interp, r2
+
+def lin_interp_2d(d1,d2,pct):
+	"""Linearly interpolate some % between d1 and d2
 	Arguments
 	---------
-	:param rs: list
-		Radial axes to which the profiles will be resampled
-	:param ps: list
-		List of dicts, each dict has radial profiles of several quantities to be resampled
-
-	Returns
-	-------
-	:return ps_interp: list
-		List of dicts containing profiles now resampled to rs
-	"""
-	ps_interp=[]
-	for (i,p) in enumerate(ps):
-		p_interp_cur={}
-		# resample each quantity's radial profile to the current r
-		for key in p.keys():
-			if key=="ind":
-				p_interp_cur["ind"]=np.arange(1,len(rs[i])+1)
-			elif key=="r":
-				p_interp_cur["r"]=rs[i]
-			else:
-				f=interp1d(ps[i]["r"], ps[i][key])
-				p_interp_cur[key]=f(rs[i])
-		ps_interp.append(p_interp_cur)
-	return ps_interp
-
-def interp_2d(ps, cur_time, all_times, spline_order):
-	"""Perform cubic spline interpolation on a 
-
-	Arguments
-	---------
-	:param ps: list
-		Data vectors at all_times
-	:param cur_time: np.array
+	:param d1: np.array
 		First data vector
-	:param all_times: np.array
+	:param d2: np.array
 		Second data vector
-	:param spline_order: int
-		B-spline degree
-
+	:param pct: float
+		Percentage of the way between d1 and d2
 	Returns
 	-------
-	:return p_interp: np.array
-		Data vector at cur_time
+	:return d_mid: np.array
+		Data vector some % between d1 and d2
 	"""
-	# turn ps into a 2d array
-	ps=np.array(ps)
+	return (1-pct)*d1 + (pct)*d2
 
-	# perform cubic spline interpolation
-	f = make_interp_spline(all_times, ps, k=spline_order, axis=0)
+def interpolate_single_quantity(r1, d1, r2, d2, pct, key):
+	"""Interpolate between two curves with the same number of points.
+	Arguments
+	---------
+	:param r: np.array
+		Radius
+	:param d1: np.array
+		First data array
+	:param d2: np.array
+		Second data array
+	:param pct: float
+		A value between 0 and 1 representing the distance between d1 and d2
+	Returns
+	-------
+	:return d_mid: np.array
+		Data array pct between d1 and d2
+	"""
+	f=interp1d(d1["r"], d1[key])
+	d1_interp=f(r1)
+	f=interp1d(d2["r"], d2[key])
+	d2_interp=f(r2)
 
-	# interpolate profile at cur_time
-	p_interp=f(cur_time) 
+	# simple linear interpolation
+	d_mid=lin_interp_2d(d1_interp, d2_interp, pct)
 
-	return p_interp
+	return d_mid

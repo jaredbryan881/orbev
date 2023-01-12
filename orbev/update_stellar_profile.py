@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 from model_io import load_profile, save_profile, load_orbital_state
-from interpolate_profile import select_profiles, resample_radial_axes, resample_profiles, interp_2d
+from interpolate_profile import select_profiles, get_interpolation_axis, lin_interp_2d, interpolate_single_quantity
 import mesa_reader as mr
 
 import params
@@ -32,10 +32,6 @@ def main():
 	pnum1,pnum2=select_profiles(cur_time, sh.star_age, params.allowable_profiles, 2)
 	pct=(cur_time-sh.star_age[pnum1])/(sh.star_age[pnum2]-sh.star_age[pnum1])
 	
-	# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
-	# find the N nearest stellar models in time
-	selected_pnums = select_profiles(cur_time, sh.star_age, params.allowable_profiles, params.n_profiles)
-
 	# load profiles and their headers
 	if pct<0.001:
 		print("Loading profile {}".format(pnum1))
@@ -48,42 +44,34 @@ def main():
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	else:
-		print("Currently {}% between profile {} and {}. Performing cubic spline interpolation with {} profiles.".format(pct*100, pnum1, pnum2, params.n_profiles))
+		# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
+		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1, pnum2))
+		p1,header1=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum1))
+		p2,header2=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2))
 
-		# load the selected profiles and their headers
-		profiles=[]
-		headers=[]
-		for pnum in selected_pnums:
-			p, h = load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum+1))
-			profiles.append(p)
-			headers.append(h)
-
-		# get each profiles in selected_profiles to have the same number of samples
-		# done by finding the profile with the most samples and cascading Monge maps to couple each profile
-		rs_interp = resample_radial_axes([p["r"] for p in profiles])
-		profiles_interp = resample_profiles(rs_interp, profiles)
+		r1_interp, r2_interp=get_interpolation_axis(p1["r"], p2["r"])
 
 		p_mid={}
-		for key in profiles_interp[0].keys():
+		for key in p1.keys():
 			if key=="ind":
-				p_mid["ind"]=np.arange(1,len(rs_interp[0])+1)
+				p_mid["ind"]=np.arange(1,len(r1_interp)+1)
 			elif key=="r":
-				p_mid["r"]=interp_2d(rs_interp, cur_time, sh.star_age[selected_pnums], params.spline_order)
+				p_mid["r"]=lin_interp_2d(r1_interp, r2_interp, pct)
 			else:
-				p_mid[key]=interp_2d([p[key] for p in profiles_interp], cur_time, sh.star_age[selected_pnums], params.spline_order)
+				p_mid[key]=interpolate_single_quantity(r1_interp, p1, r2_interp, p2, pct, key)
 
 		# interpolate header values
-		M_mid=interp_2d([h[1] for h in headers], cur_time, sh.star_age[selected_pnums], params.spline_order)
-		R_mid=interp_2d([h[2] for h in headers], cur_time, sh.star_age[selected_pnums], params.spline_order)
-		L_mid=interp_2d([h[3] for h in headers], cur_time, sh.star_age[selected_pnums], params.spline_order)
+		M_mid=lin_interp_2d(header1[1], header2[1], pct)
+		R_mid=lin_interp_2d(header1[2], header2[2], pct)
+		L_mid=lin_interp_2d(header1[3], header2[3], pct)
 
 		# write interpolated header and profile to a profile.data.GYRE file
-		header_mid=np.array([[len(rs_interp[0]), M_mid, R_mid, L_mid, int(101)]])
+		header_mid=np.array([[len(r1_interp), M_mid, R_mid, L_mid, int(101)]])
 		save_profile(p_mid, header_mid)
 
 	# interpolate and save current stellar moment of inertia
 	Is=np.loadtxt(base_sh_finame+"stellar_MOIs.txt")
-	cur_I = interp_2d(Is[selected_pnums], cur_time, sh.star_age[selected_pnums], params.spline_order)
+	cur_I = lin_interp_2d(Is[pnum1], Is[pnum2], pct)
 	np.savetxt("current_stellar_MOI.txt", np.array([cur_I]))
 
 if __name__=="__main__":
