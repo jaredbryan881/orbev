@@ -27,6 +27,8 @@ python params.py $job_n
 python prepare_mesa_segment.py
 # and run the MESA model
 ./re photo_cur
+# clean up the LOGS directory
+rm LOGS/profile*.data
 # calculate the moments of inertia for the MESA models in the current chunk
 python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
 
@@ -36,7 +38,7 @@ do
 	echo $i
 	# BEGIN GYRE-TIDES
 	# get a fresh gyre inlist
-	cp ${base_work_dir}/base_setup/gyre_base_setup/base_gyre_tides.in .
+	cp ${base_work_dir}/base_setup/gyre_base_setup/gyre_tides.in .
 
 	if ((i>1)); then
 		# calculate secular rates of change
