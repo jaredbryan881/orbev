@@ -22,9 +22,6 @@ cp ../../orbev/*.py .
 cp ../../base_setup/gyre_base_setup/params.py .
 python params.py $job_n
 
-# create a list of the original photos so we can keep the photos directory clean
-python create_photo_album.py
-
 # if we aren't storing every profile, we need to generate the current chunk
 # copy the correct photo or return an exit 1
 # and edit the inlist_MS with the new max_model_num

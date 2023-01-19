@@ -58,5 +58,8 @@ mv LOGS/history.data LOGS/history_full.data
 sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
 sed -i "s/photo_interval=.*/photo_interval=100000/g" inlist_MS # photo interval is longer than max_model_number-> no photos
 
+# create a list of the original photos so we can keep the photos directory clean
+python create_photo_album.py
+
 # return to base directory
 cd ../..
