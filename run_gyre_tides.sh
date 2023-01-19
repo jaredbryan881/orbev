@@ -2,10 +2,8 @@
 
 conda activate astero
 
-# directory containing template gyre inlists
-base_gyre_work_dir="/home/jared/MIT/astero/gyre_HATP2/orbev/base_setup"
-# directory containing the MESA stellar profiles
-mesa_work_dir="/home/jared/MIT/astero/mesa_HATP2/live_planet"
+# path to directory containing orbev collection
+base_work_dir="/home/jared/MIT/astero/gyre_HATP2/orbev/"
 # GYRE directory (with GYRE-tides enabled)
 export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 
@@ -15,7 +13,6 @@ job_n=${3-0} # take command line arg or else just label it as 0
 
 # create a place to work
 cur_dir="M${m}_Z${z}"
-# mkdir ${cur_dir}_${job_n} # taken out bc it's in run_mesa_backbone
 cd output/${cur_dir}_${job_n}
 
 # copy the update scripts
@@ -31,27 +28,15 @@ python prepare_mesa_segment.py
 # and run the MESA model
 ./re photo_cur
 # calculate the moments of inertia for the MESA models in the current chunk
-python calculate_Is.py $mesa_work_dir/$cur_dir/LOGS
+python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
 
 # take some finite number of steps
 for i in {1..10000}
 do
 	echo $i
-
-	# BEGIN MESA
-	# if we aren't storing every profile, we need to generate the current chunk
-	# copy the correct photo
-	python prepare_mesa_segment.py $cur_time
-	# and run the MESA model
-	./re photo_cur
-	# calculate the moments of inertia for the MESA models in the current chunk
-	python calculate_Is.py $mesa_work_dir/$cur_dir/LOGS
-	# END MESA
-
-
 	# BEGIN GYRE-TIDES
 	# get a fresh gyre inlist
-	cp ${base_gyre_work_dir}/gyre_tides.in .
+	cp ${base_work_dir}/base_setup/gyre_base_setup/base_gyre_tides.in .
 
 	if ((i>1)); then
 		# calculate secular rates of change
