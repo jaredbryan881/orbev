@@ -28,7 +28,7 @@ def main():
 	cur_param_ind=int(sys.argv[3])
 
 	# Read stellar history file
-	sh_finame="./LOGS/history.data"
+	sh_finame="./LOGS/history_full.data"
 	sh=mr.MesaData(sh_finame)
 
 	if pind==1:

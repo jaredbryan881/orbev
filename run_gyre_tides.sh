@@ -23,10 +23,15 @@ cp ../../base_setup/gyre_base_setup/params.py .
 python params.py $job_n
 
 # if we aren't storing every profile, we need to generate the current chunk
-# copy the correct photo
-python prepare_mesa_segment.py 0
-# and run the MESA model
-./re photo_cur
+# copy the correct photo or return an exit 1
+# and edit the inlist_MS with the new max_model_num
+if ! python prepare_mesa_segment.py 0; then
+	# no preceding photo is available, so we just have to start from ZAMS .mod file
+	./rn
+else
+	# run the MESA model from current photo
+	./re photo_cur
+fi
 # clean up the LOGS directory
 rm LOGS/profile*.data
 
@@ -58,10 +63,17 @@ do
 		rm LOGS/profile*
 		rm LOGS/history.data
 		rm photos/photo_cur
-		# copy the correct photo
-		python prepare_mesa_segment.py $i
-		# run the MESA model
-		./re photo_cur
+
+		# copy the correct photo or return an exit 1
+		# and edit the inlist_MS with the new max_model_num
+		if ! python prepare_mesa_segment.py $i; then
+			# no preceding photo is available, so we just have to start from ZAMS .mod file
+			./rn
+		else
+			# run the MESA model from current photo
+			./re photo_cur
+		fi
+
 		# clean up the LOGS directory
 		rm LOGS/profile*.data
 

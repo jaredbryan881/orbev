@@ -9,7 +9,7 @@ import params
 
 def main():
 	# Read stellar history file
-	sh_finame="./LOGS/history.data"
+	sh_finame="./LOGS/history_full.data"
 	sh=mr.MesaData(sh_finame)
 
 	# Read orbital configuration
