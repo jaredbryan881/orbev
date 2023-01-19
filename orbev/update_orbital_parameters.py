@@ -30,20 +30,24 @@ def main():
 	# Read stellar history file
 	sh_finame="./LOGS/history.data"
 	sh=mr.MesaData(sh_finame)
- 
-	# get stellar state from the current profile.data.GYRE
-	cur_R,cur_M=load_stellar_state("profile_cur.data.GYRE") # [cm], [g]
-	cur_R=cur_R/100/Rsun  # [Rsun]
-	cur_M=cur_M/1000/Msun # [Msun]
 
 	if pind==1:
 		# Initialize orbital configuration in the GYRE inlist
 		update_orbital_parameters(params.OmegaOrb0[cur_param_ind], params.OmegaRot0[cur_param_ind], params.e0[cur_param_ind], params.gyre_inlist)
 		# Initialize orbital configuration history file
+		# little hack to get around not having the orbital history file yet: 
+		# just interpret the initial M from the cur_dir string as a mass in Msun
+		# it's pretty ugly though
+		cur_M=float(cur_dir.split('M')[1].split("_")[0])
 		a0=OmegaOrb_to_a(params.OmegaOrb0[cur_param_ind], cur_M)
 		# initialize history file
 		update_history(params.t0, a0, params.e0[cur_param_ind], params.OmegaRot0[cur_param_ind])
 		return
+
+	# get stellar state from the current profile.data.GYRE
+	cur_R,cur_M=load_stellar_state("profile_cur.data.GYRE") # [cm], [g]
+	cur_R=cur_R/100/Rsun  # [Rsun]
+	cur_M=cur_M/1000/Msun # [Msun]
 
 	# Read orbital configuration
 	oh_finame="orbital_history.data"

@@ -8,24 +8,13 @@ import mesa_reader as mr
 import params
 
 def main():
-	# load command line arguments
-	pind=int(sys.argv[1])
-	cur_dir=sys.argv[2]
-	ip=int(sys.argv[3])
-
 	# Read stellar history file
-	base_sh_finame="{}/{}/LOGS/".format(params.mesa_diname, cur_dir)
-	sh_finame=base_sh_finame+"history.data"
+	sh_finame="./LOGS/history.data"
 	sh=mr.MesaData(sh_finame)
 
 	# Read orbital configuration
 	oh_finame="orbital_history.data"
 	cur_time,cur_a,cur_e,cur_OmegaRot=load_orbital_state(oh_finame)
-
-	if pind==1:
-		# just use the first profile copied in the shell script
-		print("Starting with profile {}".format(ip))
-		return
 
 	# First, check whether we are close enough to a grid point to just load an exact stellar model
 	# distance between two nearest profiles
@@ -34,20 +23,20 @@ def main():
 	
 	# load profiles and their headers
 	if pct<0.001:
-		print("Loading profile {}".format(pnum1))
-		p,header=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum1))
+		print("Loading profile {}".format(pnum1+1))
+		p,header=load_profile("./LOGS/profile{}.data.GYRE".format(pnum1+1))
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
-		p,header=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2))
+		p,header=load_profile("./LOGS/profile{}.data.GYRE".format(pnum2+1))
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	else:
 		# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
-		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1, pnum2))
-		p1,header1=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum1))
-		p2,header2=load_profile(base_sh_finame+"profile{}.data.GYRE".format(pnum2))
+		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1+1, pnum2+1))
+		p1,header1=load_profile("./LOGS/profile{}.data.GYRE".format(pnum1+1))
+		p2,header2=load_profile("./LOGS/profile{}.data.GYRE".format(pnum2+1))
 
 		r1_interp, r2_interp=get_interpolation_axis(p1["r"], p2["r"])
 
@@ -70,7 +59,7 @@ def main():
 		save_profile(p_mid, header_mid)
 
 	# interpolate and save current stellar moment of inertia
-	Is=np.loadtxt(base_sh_finame+"stellar_MOIs.txt")
+	Is=np.loadtxt("./LOGS/stellar_MOIs.txt")
 	cur_I = lin_interp_2d(Is[pnum1], Is[pnum2], pct)
 	np.savetxt("current_stellar_MOI.txt", np.array([cur_I]))
 
