@@ -8,15 +8,18 @@ import shutil
 
 import params
 
+from model_io import load_orbital_state
+
 def main():
+	pind=int(sys.argv[1])
 	# get the current time
-	if len(sys.argv)==1:
+	if pind==0:
+		# load initial time
 		cur_time = params.t0
-	elif len(sys.argv)==2:
-		cur_time = float(sys.argv[1])
 	else:
-		print("Wrong number of arguments.")
-		raise ValueError("Invalid number of arguments. Must be 0 or 1, but you provided {}.".format(len(sys.argv)-1))
+		# load current time
+		oh_finame="orbital_history.data"
+		cur_time,_,_,_=load_orbital_state(oh_finame)
 
 	# locate the nearest photo
 	photo_string, photo_num = get_nearest_photo(cur_time)

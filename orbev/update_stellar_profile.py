@@ -20,7 +20,8 @@ def main():
 	# distance between two nearest profiles
 	pnum1,pnum2=select_profiles(cur_time, sh.star_age, params.allowable_profiles, 2)
 	pct=(cur_time-sh.star_age[pnum1])/(sh.star_age[pnum2]-sh.star_age[pnum1])
-	
+	assert (pct>=0 and pct<=1), "{} is not a valid range for interpolation. Must be between 0 and 1.".format(pct)
+	print("Currently {}% between profile {} and {}".format(pct*100, pnum1+1, pnum2+1))
 	# load profiles and their headers
 	if pct<0.001:
 		print("Loading profile {}".format(pnum1+1))

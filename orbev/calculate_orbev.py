@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 def main():
 	# load command line arguments
 	pind=int(sys.argv[1])
-	cur_dir=sys.argv[2]
 
+	# don't confuse profileN/tide_orbit.h5 with profileN.data.GYRE
 	with h5py.File("./profile{}/tide_orbit.h5".format(pind-1), "r") as hf:
 		l=hf["l"][:]
 		m=hf["m"][:]

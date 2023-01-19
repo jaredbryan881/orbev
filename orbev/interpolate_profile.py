@@ -38,7 +38,7 @@ def select_profiles(cur_time, all_times, allowable_profiles, n_profiles):
 	selected_pnums=pnums_sort_inds[:n_profiles]
 	# finally, just put those selected_pnums in order
 	selected_pnums=np.sort(selected_pnums)
-	
+
 	return selected_pnums
 
 def get_interpolation_axis(r1, r2):
@@ -58,7 +58,7 @@ def get_interpolation_axis(r1, r2):
 	"""
 	N1 = len(r1)
 	N2 = len(r2)
-	
+
 	# Check whether resampling is needed
 	if N1==N2:
 		return r1, r2
@@ -68,7 +68,7 @@ def get_interpolation_axis(r1, r2):
 	b=np.ones((N2,))/N2
 
 	# TODO: combine these two cases by using dummy variables. Procedure is the same.
-	
+
 	# We want to resample both radii to the higher sampling case. So we check both cases.
 	if N1>N2:
 		# Calculate 1D transport map

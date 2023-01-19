@@ -24,11 +24,12 @@ python params.py $job_n
 
 # if we aren't storing every profile, we need to generate the current chunk
 # copy the correct photo
-python prepare_mesa_segment.py
+python prepare_mesa_segment.py 0
 # and run the MESA model
 ./re photo_cur
 # clean up the LOGS directory
 rm LOGS/profile*.data
+
 # calculate the moments of inertia for the MESA models in the current chunk
 python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
 
@@ -36,25 +37,47 @@ python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
 for i in {1..10000}
 do
 	echo $i
-	# BEGIN GYRE-TIDES
+
 	# get a fresh gyre inlist
 	cp ${base_work_dir}/base_setup/gyre_base_setup/gyre_tides.in .
 
 	if ((i>1)); then
 		# calculate secular rates of change
-		python calculate_orbev.py $i $cur_dir
+		python calculate_orbev.py $i
 	fi
 
 	# update the orbital parameters in the gyre inlist
 	python update_orbital_parameters.py $i $cur_dir $job_n
 
+	# generate new stellar profiles if needed via MESA simulation
+	# check whether we are in the bounds of the currently generated profiles
+	if python time_out_of_bounds.py; then
+		echo "Running new segment of the MESA model at step $i"
+
+		# clean up LOGS and photo directories
+		rm LOGS/profile*
+		rm LOGS/history.data
+		rm photos/photo_cur
+		# copy the correct photo
+		python prepare_mesa_segment.py $i
+		# run the MESA model
+		./re photo_cur
+		# clean up the LOGS directory
+		rm LOGS/profile*.data
+
+		# calculate the moments of inertia for the MESA models in the current chunk
+		python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
+	else
+		echo "Continuing with step $i"
+	fi
+
+	# update the stellar model in the working directory
 	if ((i>1)); then
 		# get rid of the stellar profile before we get a fresh one
 		# but only if we're making a fresh one!
 		rm profile_cur.data.GYRE
 	fi
-	# update the stellar model in the working directory
-	python update_stellar_profile.py $i $cur_dir
+	python update_stellar_profile.py $i
 
 	# Calculate the orbtial evolution rates
 	$GYRE_DIR/bin/gyre_tides gyre_tides.in
@@ -74,7 +97,6 @@ do
 		rmdir profile$i
 		break
 	fi
-	# END GYRE-TIDES
 done
 
 cd ..
