@@ -22,6 +22,9 @@ cp ../../orbev/*.py .
 cp ../../base_setup/gyre_base_setup/params.py .
 python params.py $job_n
 
+# create a list of the original photos so we can keep the photos directory clean
+python create_photo_album.py
+
 # if we aren't storing every profile, we need to generate the current chunk
 # copy the correct photo or return an exit 1
 # and edit the inlist_MS with the new max_model_num
@@ -34,6 +37,8 @@ else
 fi
 # clean up the LOGS directory
 rm LOGS/profile*.data
+# clean up photos directory
+python clean_photo_album.py
 
 # calculate the moments of inertia for the MESA models in the current chunk
 python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
@@ -56,13 +61,12 @@ do
 
 	# generate new stellar profiles if needed via MESA simulation
 	# check whether we are in the bounds of the currently generated profiles
-	if python time_out_of_bounds.py; then
+	if ! python time_in_bounds.py; then
 		echo "Running new segment of the MESA model at step $i"
 
 		# clean up LOGS and photo directories
 		rm LOGS/profile*
 		rm LOGS/history.data
-		rm photos/photo_cur
 
 		# copy the correct photo or return an exit 1
 		# and edit the inlist_MS with the new max_model_num
@@ -73,9 +77,10 @@ do
 			# run the MESA model from current photo
 			./re photo_cur
 		fi
-
 		# clean up the LOGS directory
 		rm LOGS/profile*.data
+		# clean up photos directory
+		python clean_photo_album.py
 
 		# calculate the moments of inertia for the MESA models in the current chunk
 		python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
