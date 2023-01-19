@@ -1,0 +1,86 @@
+! inlist to evolve HAT-P-2
+
+! For the sake of future readers of this file (yourself included),
+! ONLY include the controls you are actually using.  DO NOT include
+! all of the other controls that simply have their default values.
+
+&star_job
+  ! see star/defaults/star_job.defaults
+
+  ! begin with a pre-main sequence model
+    create_pre_main_sequence_model = .true.
+
+  ! save a ZAMS model
+    save_model_when_terminate = .true.
+    save_model_filename = 'star_at_ZAMS.mod'
+
+  ! display on-screen plots
+    pgstar_flag = .false.
+
+/ ! end of star_job namelist
+
+
+&eos
+  ! eos options
+  ! see eos/defaults/eos.defaults
+
+/ ! end of eos namelist
+
+
+&kap
+  ! kap options
+  ! see kap/defaults/kap.defaults
+  use_Type2_opacities = .true.
+  Zbase=0.028
+
+/ ! end of kap namelist
+
+
+&controls
+  ! see star/defaults/controls.defaults
+
+  ! save information for GYRE models
+  write_pulse_data_with_profile = .true.
+  pulse_data_format = 'GYRE'
+
+  ! starting specifications
+  initial_mass=1.35 ! in Msun units
+  initial_z=0.028
+
+  ! options for energy conservation (see MESA V, Section 3)
+  use_gold_tolerances = .true.
+
+  ! mesh parameters?
+  mesh_delta_coeff = 0.5
+  varcontrol_target = 5.d-4
+
+  ! Mixing parameters
+  ! set_min_D_mix = .true.
+  ! min_D_mix = 1d0
+
+  MLT_option='Henyey'
+  Henyey_MLT_y_param=0.33333333d0
+  Henyey_MLT_nu_param=8
+  mixing_length_alpha=1.8
+
+  use_Ledoux_criterion=.true.
+  alpha_semiconvection=0.1
+  thermohaline_coeff=666
+  thermohaline_option='Kippenhahn'
+
+  overshoot_scheme(1) = 'exponential'
+  overshoot_zone_type(1) = 'any'
+  overshoot_zone_loc(1) = 'any'
+  overshoot_bdy_loc(1) = 'any'
+  overshoot_f(1) = 0.01
+  overshoot_f0(1) = 0.005
+
+  ! stop when the star nears ZAMS (Lnuc/L > 0.99)
+  Lnuc_div_L_zams_limit = 0.99d0
+  stop_near_zams = .true.
+
+  profile_interval=1000
+  history_interval=1
+  photo_interval=1000
+
+/ ! end of controls namelist

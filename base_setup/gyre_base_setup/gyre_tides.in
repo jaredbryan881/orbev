@@ -20,6 +20,9 @@
     Omega_rot_source = 'UNIFORM'
     Omega_rot=0.4
     Omega_rot_units = 'CYC_PER_DAY'
+    ! Omega_rot_source = 'ORBIT'
+    ! Omega_rot=1.0
+    ! Omega_rot_units = 'PSEUDO-SYNC'
 /
 
 &num
@@ -29,24 +32,26 @@
 /
 
 &tide
+    omega_c_thresh=0.01
     k_min = 0
     k_max = 50
     l_max = 2
 /
 
 &orbit
-    q = 0.007 ! Mplanet/Mstar
+    q = 0.01 ! Mplanet/Mstar
     e=0.5
     Omega_orb=0.2
     Omega_orb_units = 'CYC_PER_DAY'
 /
 
 &grid
-    w_ctr = 10
-    w_osc = 10
-    w_exp = 2
+    w_exp=2
+    w_ctr=10
+    w_osc=10
 /
 
-&tide_output
+&tides_output
     summary_file = 'tide_orbit.h5'
+    summary_item_list = 'l,m,k,eul_Psi_ref,Phi_T_ref,eul_Phi_ref,Omega_orb,q,e,R_a,cbar,Gbar_1,Gbar_2,Gbar_3,Gbar_4,eta,freq,xi_r_ref,lag_L_ref'
 /

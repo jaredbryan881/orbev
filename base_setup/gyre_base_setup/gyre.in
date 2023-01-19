@@ -27,10 +27,10 @@
 /
 
 &scan
-  grid_type = 'LINEAR' ! Scan grid uniform in inverse frequency
-  freq_min = 0.1         ! Minimum frequency to scan from
+  grid_type = 'INVERSE' ! Scan grid uniform in inverse frequency
+  freq_min = 0.01         ! Minimum frequency to scan from
   freq_max = 10.0        ! Maximum frequency to scan to
-  n_freq = 100          ! Number of frequency points in scan
+  n_freq = 1000          ! Number of frequency points in scan
 /
 
 &grid
