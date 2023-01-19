@@ -5,12 +5,11 @@ import numpy as np
 ###########
 live_orbit=False # evolve the orbital configuration?
 time_reversed=False # evolve time backward?
-store_all_profiles=False # store every single profile, or only those close to the current time?
 
 #################################
 # Initial Orbital Configuration #
 #################################
-t0=5.14e7 # [yr]
+t0=51450000 # [yr]
 e0=np.array([0.5]*50) # []
 OmegaOrb0=np.array([0.1774]*50) # [cyc/day]
 OmegaRot0=np.array([0.1774]*50)*4.8 # [cyc/day]
@@ -18,7 +17,7 @@ OmegaRot0=np.array([0.1774]*50)*4.8 # [cyc/day]
 #################
 # Update limits #
 #################
-max_dt=1e4         # [yr]
+max_dt=1e5         # [yr]
 max_de=1e-5        # []
 max_da=1e-5        # [au]
 max_dOmegaRot=1e-5 # [cyc/day]
