@@ -13,7 +13,7 @@ job_n=${3-0}
 
 # create a place to work by copying the default setup
 cur_dir="M${m}_Z${z}"
-cp -r ${base_mesa_work_dir}/base_setup output/${cur_dir}_${job_n}
+cp -r ./base_setup/mesa_base_setup output/${cur_dir}_${job_n}
 cd output/${cur_dir}_${job_n}
 
 # --- BEGIN PRE-MAIN SEQUENCE
@@ -30,7 +30,6 @@ sed -i "s/Zbase=.*/Zbase=$z/g" inlist_PMS
 # clean up the logs/photos directory, leaving only the .mod file
 rm LOGS/*
 rm photos/*
-
 # --- END PRE-MAIN SEQUENCE
 
 # --- BEGIN MAIN SEQUENCE
@@ -53,11 +52,11 @@ rm LOGS/profile*
 
 # rename the history file to protect it from being overwritten
 mv LOGS/history.data LOGS/history_full.data
-
 # --- END MAIN SEQUENCE
+
+# reformat the inlist for subsequent runs
+sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
+sed -i "s/photo_interval=.*/photo_interval=100000/g" inlist_MS # photo interval is longer than max_model_number-> no photos
 
 # return to base directory
 cd ../..
-
-# link photos to their indices in history.data
-python link_photos_to_history.py

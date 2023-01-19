@@ -11,9 +11,7 @@ export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 
 m=$1
 z=$2
-
 job_n=${3-0} # take command line arg or else just label it as 0
-ip_ind=1
 
 # create a place to work
 cur_dir="M${m}_Z${z}"
@@ -23,22 +21,35 @@ cd output/${cur_dir}_${job_n}
 # copy the update scripts
 cp ../../orbev/*.py .
 
-# copy the initial orbital conditions and update parameters
-cp ../../base_setup/params.py .
+# copy the initial orbital conditions and update-parameters
+cp ../../base_setup/gyre_base_setup/params.py .
 python params.py $job_n
 
-# copy the first profile into working directory as our starting point
-cp $mesa_work_dir/$cur_dir/LOGS/profile${ip_ind}.data.GYRE profile_cur.data.GYRE
-
-
+# if we aren't storing every profile, we need to generate the current chunk
+# copy the correct photo
+python prepare_mesa_segment.py
+# and run the MESA model
+./re photo_cur
 # calculate the moments of inertia for the MESA models in the current chunk
 python calculate_Is.py $mesa_work_dir/$cur_dir/LOGS
 
 # take some finite number of steps
-for i in {1..1000}
+for i in {1..10000}
 do
 	echo $i
 
+	# BEGIN MESA
+	# if we aren't storing every profile, we need to generate the current chunk
+	# copy the correct photo
+	python prepare_mesa_segment.py $cur_time
+	# and run the MESA model
+	./re photo_cur
+	# calculate the moments of inertia for the MESA models in the current chunk
+	python calculate_Is.py $mesa_work_dir/$cur_dir/LOGS
+	# END MESA
+
+
+	# BEGIN GYRE-TIDES
 	# get a fresh gyre inlist
 	cp ${base_gyre_work_dir}/gyre_tides.in .
 
@@ -48,7 +59,7 @@ do
 	fi
 
 	# update the orbital parameters in the gyre inlist
-	python update_orbital_parameters.py $i $cur_dir $ip_ind $job_n
+	python update_orbital_parameters.py $i $cur_dir $job_n
 
 	if ((i>1)); then
 		# get rid of the stellar profile before we get a fresh one
@@ -56,7 +67,7 @@ do
 		rm profile_cur.data.GYRE
 	fi
 	# update the stellar model in the working directory
-	python update_stellar_profile.py $i $cur_dir $ip_ind
+	python update_stellar_profile.py $i $cur_dir
 
 	# Calculate the orbtial evolution rates
 	$GYRE_DIR/bin/gyre_tides gyre_tides.in
@@ -76,6 +87,7 @@ do
 		rmdir profile$i
 		break
 	fi
+	# END GYRE-TIDES
 done
 
 cd ..
