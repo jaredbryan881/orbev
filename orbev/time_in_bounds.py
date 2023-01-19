@@ -17,11 +17,11 @@ def main():
 
 	# compare times
 	if (h.star_age[0]<cur_time) and (h.star_age[-1]>cur_time):
+		# in bounds
+		sys.exit(0)
+	else:
 		# out of bounds
 		sys.exit(1)
-	else:
-		# not out of bounds
-		sys.exit(0)
 
 if __name__=="__main__":
 	main()
