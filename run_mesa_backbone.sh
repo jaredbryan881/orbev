@@ -13,8 +13,8 @@ job_n=${3-0}
 
 # create a place to work by copying the default setup
 cur_dir="M${m}_Z${z}"
-cp -r ./base_setup/mesa_base_setup output/${cur_dir}_${job_n}
-cd output/${cur_dir}_${job_n}
+cp -r ./base_setup/mesa_base_setup ./work/${cur_dir}_${job_n}
+cd ./work/${cur_dir}_${job_n}
 
 # --- BEGIN PRE-MAIN SEQUENCE
 echo "Running pre-main sequence evolution for a star of M=${m}Msun and Z=$z"

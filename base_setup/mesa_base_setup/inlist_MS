@@ -14,6 +14,8 @@
     load_saved_model = .true.
     saved_model_name = 'star_at_ZAMS.mod'
 
+    save_model_when_terminate = .false.
+
   ! display on-screen plots
     pgstar_flag = .false.
 
@@ -88,6 +90,6 @@
   photo_interval=100
   photo_digits=6
 
-  max_model_number=1005
+  max_model_number=1000
 
 / ! end of controls namelist

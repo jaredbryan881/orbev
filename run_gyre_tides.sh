@@ -13,7 +13,7 @@ job_n=${3-0} # take command line arg or else just label it as 0
 
 # create a place to work
 cur_dir="M${m}_Z${z}"
-cd output/${cur_dir}_${job_n}
+cd work/${cur_dir}_${job_n}
 
 # copy the update scripts
 cp ../../orbev/*.py .
@@ -41,7 +41,7 @@ rm LOGS/profile*.data
 python clean_photo_album.py
 
 # calculate the moments of inertia for the MESA models in the current chunk
-python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
+python calculate_Is.py ${base_work_dir}/work/${cur_dir}_${job_n}/LOGS
 
 # take some finite number of steps
 for i in {1..10000}
@@ -83,17 +83,19 @@ do
 		python clean_photo_album.py
 
 		# calculate the moments of inertia for the MESA models in the current chunk
-		python calculate_Is.py ${base_work_dir}/output/${cur_dir}_${job_n}/LOGS
+		python calculate_Is.py ${base_work_dir}/work/${cur_dir}_${job_n}/LOGS
 	else
 		echo "Continuing with step $i"
 	fi
 
-	# update the stellar model in the working directory
+	# clean up the work directory
 	if ((i>1)); then
 		# get rid of the stellar profile before we get a fresh one
 		# but only if we're making a fresh one!
 		rm profile_cur.data.GYRE
 	fi
+
+	# update the stellar model in the working directory
 	python update_stellar_profile.py $i
 
 	# Calculate the orbtial evolution rates
