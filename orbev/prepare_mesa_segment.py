@@ -11,12 +11,13 @@ import params
 from model_io import load_orbital_state
 
 def main():
-	if params.store_all_profiles:
+	if params.use_stored_profiles:
 		# short circuit to say we don't need to modify inlists
 		# or identify photos. We have all the profiles we need.
 		sys.exit(2)
 
-	pind=int(sys.argv[1])
+	cur_path=sys.argv[1]
+	pind=int(sys.argv[2])
 	# get the current time
 	if pind==0:
 		# load initial time
@@ -27,10 +28,10 @@ def main():
 		cur_time,_,_,_=load_orbital_state(oh_finame)
 
 	# locate the nearest photo
-	photo_string, max_model_number = get_nearest_photo(cur_time)
+	photo_string, max_model_number = get_nearest_photo(cur_path, cur_time)
 
 	# update the MESA inlist's max_model_num
-	with open("inlist_MS", "r+") as file:
+	with open("{}/inlist_MS".format(cur_path), "r+") as file:
 		text = file.read()
 		text = re.sub(r"max_model_number=.*", "max_model_number={}".format(max_model_number), text)
 
@@ -45,10 +46,10 @@ def main():
 		sys.exit(1)
 	else:
 		# otherwise let's find and copy the current photo into something generically runnable by the bash script
-		shutil.copy("./photos/{}".format(photo_string), "./photos/photo_cur")
+		shutil.copy("{}/photos/{}".format(cur_path,photo_string), "{}/photos/photo_cur".format(cur_path))
 		sys.exit(0)
 
-def get_nearest_photo(cur_time):
+def get_nearest_photo(cur_path, cur_time):
 	"""Find the nearest preceding photo to cur_time
 
 	Arguments
@@ -64,11 +65,11 @@ def get_nearest_photo(cur_time):
 		Model number at which to stop the simulation. Should be at least profile_num+profile_interval.
 	"""
 	# Read stellar history file
-	sh_finame="./LOGS/history_full.data"
+	sh_finame="{}/LOGS/history_full.data".format(cur_path)
 	sh=mr.MesaData(sh_finame)
 
 	# get a list of profiles
-	photo_list = glob.glob("./photos/*")
+	photo_list = glob.glob("{}/photos/*".format(cur_path))
 	# keep just the photo names without the full path
 	photo_list = [photo.split('/')[-1] for photo in photo_list]
 	# interpret the photo name as an integer for association with model_number

@@ -5,7 +5,7 @@ import numpy as np
 ###########
 live_orbit=False # evolve the orbital configuration?
 time_reversed=False # evolve time backward?
-store_all_profiles=False # assume we have all the profiles we need? or else generate them as we go.
+use_stored_profiles=False # assume we have all the profiles we need? or else generate them as we go.
 
 #################################
 # Initial Orbital Configuration #

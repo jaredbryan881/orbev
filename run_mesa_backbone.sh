@@ -9,12 +9,11 @@ export MESA_DIR=/home/jared/MIT/astero/mesa
 
 m=$1
 z=$2
-job_n=${3-0}
 
 # create a place to work by copying the default setup
 cur_dir="M${m}_Z${z}"
-cp -r ./base_setup/mesa_base_setup ./work/${cur_dir}_${job_n}
-cd ./work/${cur_dir}_${job_n}
+cp -r ./base_setup/mesa_base_setup ./work/${cur_dir}
+cd ./work/${cur_dir}
 
 # --- BEGIN PRE-MAIN SEQUENCE
 echo "Running pre-main sequence evolution for a star of M=${m}Msun and Z=$z"
@@ -57,9 +56,6 @@ mv LOGS/history.data LOGS/history_full.data
 # reformat the inlist for subsequent runs
 sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
 sed -i "s/photo_interval=.*/photo_interval=100000/g" inlist_MS # photo interval is longer than max_model_number-> no photos
-
-# create a list of the original photos so we can keep the photos directory clean
-python create_photo_album.py
 
 # return to base directory
 cd ../..

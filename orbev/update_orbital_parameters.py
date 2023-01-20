@@ -23,12 +23,13 @@ au = 1.496e+11   # [m]
 
 def main():
 	# load command line arguments
-	pind=int(sys.argv[1])
-	cur_dir=sys.argv[2]
-	cur_param_ind=int(sys.argv[3])
+	cur_path=sys.argv[1]
+	pind=int(sys.argv[2])
+	cur_dir=sys.argv[3]
+	cur_param_ind=int(sys.argv[4])
 
 	# Read stellar history file
-	sh_finame="./LOGS/history_full.data"
+	sh_finame="{}/LOGS/history_full.data".format(cur_path)
 	sh=mr.MesaData(sh_finame)
 
 	if pind==1:
