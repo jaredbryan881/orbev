@@ -1,7 +1,5 @@
 #!/bin/bash
 
-conda activate astero
-
 # GYRE directory (with GYRE-tides enabled)
 export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 
