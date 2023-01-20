@@ -1,6 +1,7 @@
 import numpy as np
 import mesa_reader as mr
 from model_io import load_orbital_state
+import params
 
 import sys
 
@@ -12,7 +13,13 @@ def main():
 	cur_time,_,_,_=load_orbital_state(oh_finame)
 
 	# load times of MESA profiles
-	sh_finame="./LOGS/history.data"
+	if params.store_all_profiles:
+		# assume only local profiles exist
+		sh_finame="./LOGS/history_full.data"
+	else:
+		# assume we have all profiles
+		# we should always be in-bounds until the simulation finishes (assuming t0 set properly)
+		sh_finame-"./LOGS/history.data"
 	h=mr.MesaData(sh_finame)
 
 	# compare times

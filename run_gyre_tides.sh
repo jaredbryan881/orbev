@@ -25,14 +25,24 @@ python params.py $job_n
 # if we aren't storing every profile, we need to generate the current chunk
 # copy the correct photo or return an exit 1
 # and edit the inlist_MS with the new max_model_num
-if ! python prepare_mesa_segment.py 0; then
-	# no preceding photo is available, so we just have to start from ZAMS .mod file
-	./rn
-else
+python prepare_mesa_segment.py 0
+mesa_prep_exit_status=$?
+if [ "${mesa_prep_exit_status}" -eq 0 ]; then
+	# photo found successfully and inlist_MS modified
 	# run the MESA model from current photo
 	./re photo_cur
+elif [ "${mesa_prep_exit_status}" -eq 1 ]; then
+	# no preceding photo is available, so we just have to start from ZAMS .mod file
+	./rn
+elif [ "${mesa_prep_exit_status}" -eq 2 ]; then
+	# no need to prepare any photos at all. We already have the profiles we need.
+	echo "Profiles already exist. Continuing."
+else
+	echo "Not sure how you got here. Check your MESA segment preparation."
 fi
-# clean up the LOGS directory
+
+# clean up the LOGS directory 
+# don't confuse this for deleting profile*.data.GYRE, which we very much want to keep
 rm LOGS/profile*.data
 # clean up photos directory
 python clean_photo_album.py
@@ -65,15 +75,22 @@ do
 		rm LOGS/profile*
 		rm LOGS/history.data
 
-		# copy the correct photo or return an exit 1
-		# and edit the inlist_MS with the new max_model_num
-		if ! python prepare_mesa_segment.py $i; then
-			# no preceding photo is available, so we just have to start from ZAMS .mod file
-			./rn
-		else
+		python prepare_mesa_segment.py $i
+		mesa_prep_exit_status=$?
+		if [ "${mesa_prep_exit_status}" -eq 0 ]; then
+			# photo found successfully and inlist_MS modified
 			# run the MESA model from current photo
 			./re photo_cur
+		elif [ "${mesa_prep_exit_status}" -eq 1 ]; then
+			# no preceding photo is available, so we just have to start from ZAMS .mod file
+			./rn
+		elif [ "${mesa_prep_exit_status}" -eq 2 ]; then
+			# no need to prepare any photos at all. We already have the profiles we need.
+			echo "Profiles already exist. Continuing."
+		else
+			echo "Not sure how you got here. Check your MESA segment preparation."
 		fi
+
 		# clean up the LOGS directory
 		rm LOGS/profile*.data
 		# clean up photos directory

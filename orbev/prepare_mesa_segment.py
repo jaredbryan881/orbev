@@ -11,6 +11,11 @@ import params
 from model_io import load_orbital_state
 
 def main():
+	if params.store_all_profiles:
+		# short circuit to say we don't need to modify inlists
+		# or identify photos. We have all the profiles we need.
+		sys.exit(2)
+
 	pind=int(sys.argv[1])
 	# get the current time
 	if pind==0:
@@ -41,6 +46,7 @@ def main():
 	else:
 		# otherwise let's find and copy the current photo into something generically runnable by the bash script
 		shutil.copy("./photos/{}".format(photo_string), "./photos/photo_cur")
+		sys.exit(0)
 
 def get_nearest_photo(cur_time):
 	"""Find the nearest preceding photo to cur_time
