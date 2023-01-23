@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# home directory
-orbev_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
-# directory containing the MESA stellar profiles
-base_mesa_work_dir="/home/jared/MIT/astero/mesa_HATP2/live_planet"
 # GYRE directory (with GYRE-tides enabled)
 export MESA_DIR=/home/jared/MIT/astero/mesa
 
+# home directory
+base_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
+
+# current parameters
 m=$1
 z=$2
 
 # create a place to work by copying the default setup
 cur_dir="M${m}_Z${z}"
-cp -r ./base_setup/mesa_base_setup ./work/${cur_dir}
-cd ./work/${cur_dir}
+cp -r ${base_dir}/base_setup/mesa_base_setup ${base_dir}/work/${cur_dir}
+cd ${base_dir}/work/${cur_dir}
 
 # --- BEGIN PRE-MAIN SEQUENCE
 echo "Running pre-main sequence evolution for a star of M=${m}Msun and Z=$z"
@@ -27,8 +27,8 @@ sed -i "s/Zbase=.*/Zbase=$z/g" inlist_PMS
 ./rn
 
 # clean up the logs/photos directory, leaving only the .mod file
-rm LOGS/*
-rm photos/*
+rm ${base_dir}/work/${cur_dir}/LOGS/*
+rm ${base_dir}/work/${cur_dir}/photos/*
 # --- END PRE-MAIN SEQUENCE
 
 # --- BEGIN MAIN SEQUENCE
@@ -47,10 +47,10 @@ sed -i 's/inlist_PMS/inlist_MS/g' inlist
 ./rn
 
 # just get rid of the profiles to start fresh
-rm LOGS/profile*
+rm ${base_dir}/work/${cur_dir}/LOGS/profile*
 
 # rename the history file to protect it from being overwritten
-mv LOGS/history.data LOGS/history_full.data
+mv ${base_dir}/work/${cur_dir}/LOGS/history.data ${base_dir}/work/${cur_dir}/LOGS/history_full.data
 # --- END MAIN SEQUENCE
 
 # reformat the inlist for subsequent runs
@@ -58,4 +58,4 @@ sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profi
 sed -i "s/photo_interval=.*/photo_interval=100000/g" inlist_MS # photo interval is longer than max_model_number-> no photos
 
 # return to base directory
-cd ../..
+cd ${base_dir}
