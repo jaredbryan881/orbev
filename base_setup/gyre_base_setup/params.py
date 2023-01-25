@@ -10,7 +10,7 @@ use_stored_profiles=False # assume we have all the profiles we need? or else gen
 #################################
 # Initial Orbital Configuration #
 #################################
-t0=51450000 # [yr]
+t0=None # [yr]
 e0=np.array([0.5]*50) # []
 OmegaOrb0=np.array([0.1774]*50) # [cyc/day]
 OmegaRot0=np.array([0.1774]*50)*4.8 # [cyc/day]
@@ -18,7 +18,7 @@ OmegaRot0=np.array([0.1774]*50)*4.8 # [cyc/day]
 #################
 # Update limits #
 #################
-max_dt=1e5         # [yr]
+max_dt=2.5e4         # [yr]
 max_de=1e-5        # []
 max_da=1e-5        # [au]
 max_dOmegaRot=1e-5 # [cyc/day]

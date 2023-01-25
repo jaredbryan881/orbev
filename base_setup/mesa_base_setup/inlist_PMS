@@ -50,20 +50,12 @@
   ! options for energy conservation (see MESA V, Section 3)
   use_gold_tolerances = .true.
 
-  ! mesh parameters?
-  mesh_delta_coeff = 0.5
-  varcontrol_target = 5.d-4
-
   ! Mixing parameters
-  ! set_min_D_mix = .true.
-  ! min_D_mix = 1d0
-
   MLT_option='Henyey'
-  Henyey_MLT_y_param=0.33333333d0
-  Henyey_MLT_nu_param=8
-  mixing_length_alpha=1.8
+  mixing_length_alpha=1.8d0
 
   use_Ledoux_criterion=.true.
+  do_conv_premix = .true.
   alpha_semiconvection=0.1
   thermohaline_coeff=666
   thermohaline_option='Kippenhahn'
@@ -75,12 +67,18 @@
   overshoot_f(1) = 0.01
   overshoot_f0(1) = 0.005
 
+  ! Timestep and mesh parameters
+  mesh_delta_coeff = 0.5
+
+  ! Stopping conditions
   ! stop when the star nears ZAMS (Lnuc/L > 0.99)
   Lnuc_div_L_zams_limit = 0.99d0
   stop_near_zams = .true.
 
+  ! Output specifications
   profile_interval=1000
   history_interval=1
   photo_interval=1000
+  terminal_interval=100
 
 / ! end of controls namelist

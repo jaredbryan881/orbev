@@ -6,6 +6,9 @@ export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 # path to directory containing orbev collection
 base_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
 
+# path to directory we'll run code from and save files to
+base_work_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
+
 # current parameters
 m=$1
 z=$2
@@ -13,7 +16,7 @@ job_n=${3-0} # take command line arg or else just label it as 0
 
 # create a place to work
 cur_star="M${m}_Z${z}"
-cur_star_path="${base_dir}/work/${cur_star}"
+cur_star_path="${base_work_dir}/work/${cur_star}"
 cur_orbit="orb${job_n}"
 cur_orbit_path="${cur_star_path}_${cur_orbit}"
 
@@ -23,11 +26,12 @@ if [ ! -d "${cur_orbit_path}" ]; then
 	cp -r ${cur_star_path} ${cur_orbit_path}
 	# get glue scripts
 	cp -r ${base_dir}/orbev/* ${cur_orbit_path}
+	# copy the initial orbital conditions and update-parameters
+	cp ${base_dir}/base_setup/gyre_base_setup/params.py ${cur_orbit_path}
 fi
 cd ${cur_orbit_path}
 
-# copy the initial orbital conditions and update-parameters
-cp ${base_dir}/base_setup/gyre_base_setup/params.py .
+# info
 python params.py ${job_n}
 
 # create a list of the original MESA photos so we can keep the photos directory clean

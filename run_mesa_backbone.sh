@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# GYRE directory (with GYRE-tides enabled)
-export MESA_DIR=/home/jared/MIT/astero/mesa
-
 # home directory
 base_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
 

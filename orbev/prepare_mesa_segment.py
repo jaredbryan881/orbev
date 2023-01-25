@@ -21,7 +21,13 @@ def main():
 	# get the current time
 	if pind==0:
 		# load initial time
-		cur_time = params.t0
+		if params.t0 is None:
+			# load stellar history and use the age at ZAMS
+			sh_finame="{}/LOGS/history_full.data".format(cur_path)
+			sh=mr.MesaData(sh_finame)
+			cur_time=sh.star_age[0]
+		else:
+			cur_time=params.t0
 	else:
 		# load current time
 		oh_finame="orbital_history.data"
