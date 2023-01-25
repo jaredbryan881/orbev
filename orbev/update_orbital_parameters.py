@@ -42,6 +42,8 @@ def main():
 		cur_M=float(cur_dir.split('M')[1].split("_")[0])
 		a0=OmegaOrb_to_a(params.OmegaOrb0[cur_param_ind], cur_M)
 		# initialize history file
+		if params.t0 is None:
+			params.t0=np.ceil(sh.star_age[0])
 		update_history(params.t0, a0, params.e0[cur_param_ind], params.OmegaRot0[cur_param_ind])
 		return
 

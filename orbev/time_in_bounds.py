@@ -25,7 +25,7 @@ def main():
 	h=mr.MesaData(sh_finame)
 
 	# compare times
-	if (h.star_age[0]<cur_time) and (h.star_age[-1]>cur_time):
+	if (h.star_age[0]<=cur_time) and (h.star_age[-1]>=cur_time):
 		# in bounds
 		sys.exit(0)
 	else:

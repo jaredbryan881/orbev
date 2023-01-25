@@ -68,7 +68,7 @@ python clean_photo_album.py ${cur_orbit_path}
 python calculate_Is.py ${cur_orbit_path}/LOGS
 
 # take some finite number of steps
-for i in {1..10000}
+for i in {1..1000}
 do
 	echo $i
 

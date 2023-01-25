@@ -38,7 +38,10 @@ def main():
 	print("####################################")
 	print("#### Initial Orbital Parameters ####")
 	print("####################################")
-	print("t_0: {} Gyr".format(t0/1e9))
+	if t0 is None:
+		print("t_0: ZAMS")
+	else:
+		print("t_0: {} Gyr".format(t0/1e9))
 	print("e_0: {}".format(e0[ip_ind]))
 	print("Omega_orb0: {} cyc/day".format(OmegaOrb0[ip_ind]))
 	print("Omega_rot0: {} cyc/day".format(OmegaRot0[ip_ind]))
