@@ -84,6 +84,8 @@
   photo_interval=100
   photo_digits=6
 
+  log_directory='LOGS'
+
   ! save information for GYRE models
   write_pulse_data_with_profile = .true.
   pulse_data_format = 'GYRE'

@@ -4,10 +4,13 @@
 export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 
 # path to directory containing orbev collection
-base_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
+base_fidir="/home/jared/MIT/astero/gyre_HATP2/orbev"
 
-# path to directory we'll run code from and save files to
+# path to directory we'll run code from
 base_work_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
+
+# path to place we'll save files to
+base_fodir="/home/jared/MIT/astero/gyre_HATP2/orbev/output"
 
 # current parameters
 m=$1
@@ -15,21 +18,34 @@ z=$2
 job_n=${3-0} # take command line arg or else just label it as 0
 
 # create a place to work
+# Path to MESA model for the current mass/metallicity
 cur_star="M${m}_Z${z}"
 cur_star_path="${base_work_dir}/work/${cur_star}"
+# Path to MESA model for the current orbit, a copy of the one at cur_star_path
 cur_orbit="orb${job_n}"
 cur_orbit_path="${cur_star_path}_${cur_orbit}"
+# Path to the MESA profiles and GYRE-tides output directory
+fodir="${base_fodir}/${cur_star}"
+orbev_fodir="${base_fodir}/${cur_star}_${cur_orbit}"
+mkdir ${orbev_fodir}
 
 # set up the directory for orbital evolution
+# Check whether we have the base directory containing the photos
 if [ ! -d "${cur_orbit_path}" ]; then
 	# get MESA copy for filling in profiles
 	cp -r ${cur_star_path} ${cur_orbit_path}
 	# get glue scripts
-	cp -r ${base_dir}/orbev/* ${cur_orbit_path}
+	cp -r ${base_fidir}/orbev/* ${cur_orbit_path}
 	# copy the initial orbital conditions and update-parameters
-	cp ${base_dir}/base_setup/gyre_base_setup/params.py ${cur_orbit_path}
+	cp ${base_fidir}/base_setup/gyre_base_setup/params.py ${cur_orbit_path}
 fi
 cd ${cur_orbit_path}
+
+# reformat the inlist to save every profile but no photos
+sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
+sed -i "s/photo_interval=.*/photo_interval=100000/g" inlist_MS # photo interval is longer than max_model_number-> no photos
+# save these profiles into the directory for this particular orbit
+sed -i "s:log_directory=.*:log_directory='${orbev_fodir}':g" inlist_MS
 
 # info
 python params.py ${job_n}
@@ -60,12 +76,12 @@ fi
 
 # clean up the LOGS directory 
 # don't confuse this for deleting profile*.data.GYRE, which we very much want to keep
-rm ${cur_orbit_path}/LOGS/profile*.data
+rm ${orbev_fodir}/profile*.data
 # clean up photos directory
 python clean_photo_album.py ${cur_orbit_path}
 
 # calculate the moments of inertia for the MESA models in the current chunk
-python calculate_Is.py ${cur_orbit_path}/LOGS
+python calculate_Is.py ${orbev_fodir}
 
 # take some finite number of steps
 for i in {1..1000}
@@ -73,19 +89,19 @@ do
 	echo $i
 
 	# get a fresh gyre inlist
-	cp ${base_dir}/base_setup/gyre_base_setup/gyre_tides.in .
+	cp ${base_fidir}/base_setup/gyre_base_setup/gyre_tides.in .
 
 	if ((i>1)); then
 		# calculate secular rates of change
-		python calculate_orbev.py $i
+		python calculate_orbev.py ${orbev_fodir} $i
 	fi
 
 	# update the orbital parameters in the gyre inlist
-	python update_orbital_parameters.py ${cur_orbit_path} $i $cur_star ${job_n}
+	python update_orbital_parameters.py ${cur_orbit_path} $i $cur_star ${job_n} ${orbev_fodir}
 
 	# generate new stellar profiles if needed via MESA simulation
 	# check whether we are in the bounds of the currently generated profiles
-	if ! python time_in_bounds.py ${cur_orbit_path}; then
+	if ! python time_in_bounds.py ${orbev_fodir}; then
 		echo "Running new segment of the MESA model at step $i"
 
 		# clean up LOGS and photo directories
@@ -109,12 +125,12 @@ do
 		fi
 
 		# clean up the LOGS directory
-		rm ${cur_orbit_path}/LOGS/profile*.data
+		rm ${orbev_fodir}/profile*.data
 		# clean up photos directory
 		python clean_photo_album.py ${cur_orbit_path}
 
 		# calculate the moments of inertia for the MESA models in the current chunk
-		python calculate_Is.py ${cur_orbit_path}/LOGS
+		python calculate_Is.py ${orbev_fodir}
 	else
 		echo "Continuing with step $i"
 	fi
@@ -127,7 +143,7 @@ do
 	fi
 
 	# update the stellar model in the working directory
-	python update_stellar_profile.py ${cur_orbit_path}
+	python update_stellar_profile.py ${orbev_fodir}
 
 	# Calculate the orbtial evolution rates
 	$GYRE_DIR/bin/gyre_tides gyre_tides.in
@@ -136,17 +152,17 @@ do
 	# get rid of the gyre inlist
 	rm gyre_tides.in
 	# move output files to profile directory
-	mkdir profile$i
-	mv tide_orbit.h5 profile$i/   # move forced oscillation summary
+	mkdir ${orbev_fodir}/step$i
+	mv tide_orbit.h5 ${orbev_fodir}/step$i   # move forced oscillation summary
 
 	# break if the directory is empty
-	if [ "$(ls -A profile$i)" ]; then
+	if [ "$(ls -A ${orbev_fodir}/step$i)" ]; then
 		echo "tide_orbit.h5 was stored successfully for profile$i"
 	else
 		echo "tide_orbit.h5 not created, exiting."
-		rmdir profile$i
+		rmdir ${orbev_fodir}/step$i
 		break
 	fi
 done
 
-cd ${base_dir}
+cd ${base_fidir}

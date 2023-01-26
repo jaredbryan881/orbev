@@ -8,7 +8,7 @@ import sys
 def main():
 	# Check whether cur_time is outside the times spanned by the current MESA profiles
 
-	cur_path=sys.argv[1]
+	foname=sys.argv[1]
 
 	# load cur_time
 	oh_finame="orbital_history.data"
@@ -17,11 +17,11 @@ def main():
 	# load times of MESA profiles
 	if params.use_stored_profiles:
 		# assume only local profiles exist
-		sh_finame="{}/LOGS/history_full.data".format(cur_path)
+		sh_finame="{}/history_full.data".format(foname)
 	else:
 		# assume we have all profiles
 		# we should always be in-bounds until the simulation finishes (assuming t0 set properly)
-		sh_finame="{}/LOGS/history.data".format(cur_path)
+		sh_finame="{}/history.data".format(foname)
 	h=mr.MesaData(sh_finame)
 
 	# compare times

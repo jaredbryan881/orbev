@@ -8,11 +8,11 @@ import mesa_reader as mr
 import params
 
 def main():
-	cur_path=sys.argv[1]
+	base_profile_dir=sys.argv[1]
 
 	# Read stellar history file
 	# don't confuse this with history_full.data, whose indices would not relate to pnums
-	sh_finame="{}/LOGS/history.data".format(cur_path)
+	sh_finame="{}/history.data".format(base_profile_dir)
 	sh=mr.MesaData(sh_finame)
 
 	# Read orbital configuration
@@ -27,19 +27,19 @@ def main():
 	# load profiles and their headers
 	if pct<0.001:
 		print("Loading profile {}".format(pnum1+1))
-		p,header=load_profile("{}/LOGS/profile{}.data.GYRE".format(cur_path, pnum1+1))
+		p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum1+1))
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
-		p,header=load_profile("{}/LOGS/profile{}.data.GYRE".format(cur_path, num2+1))
+		p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, num2+1))
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	else:
 		# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
 		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1+1, pnum2+1))
-		p1,header1=load_profile("{}/LOGS/profile{}.data.GYRE".format(cur_path, pnum1+1))
-		p2,header2=load_profile("{}/LOGS/profile{}.data.GYRE".format(cur_path, pnum2+1))
+		p1,header1=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum1+1))
+		p2,header2=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum2+1))
 
 		r1_interp, r2_interp=get_interpolation_axis(p1["r"], p2["r"])
 
@@ -62,7 +62,7 @@ def main():
 		save_profile(p_mid, header_mid)
 
 	# interpolate and save current stellar moment of inertia
-	Is=np.loadtxt("{}/LOGS/stellar_MOIs.txt".format(cur_path))
+	Is=np.loadtxt("{}/stellar_MOIs.txt".format(base_profile_dir))
 	cur_I = lin_interp_2d(Is[pnum1], Is[pnum2], pct)
 	np.savetxt("current_stellar_MOI.txt", np.array([cur_I]))
 

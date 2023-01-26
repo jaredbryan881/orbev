@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 
 def main():
 	# load command line arguments
-	pind=int(sys.argv[1])
+	orbev_fodir=sys.argv[1]
+	pind=int(sys.argv[2])
 
 	# don't confuse profileN/tide_orbit.h5 with profileN.data.GYRE
-	with h5py.File("./profile{}/tide_orbit.h5".format(pind-1), "r") as hf:
+	with h5py.File("{}/step{}/tide_orbit.h5".format(orbev_fodir,pind-1), "r") as hf:
 		l=hf["l"][:]
 		m=hf["m"][:]
 		k=hf["k"][:]
@@ -75,7 +76,7 @@ def main():
 		e_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_3[ind]
 		J_dots[i_l,i_m,i_k] = 4*Omega_orb*q**2/np.sqrt(R_a*(1+q))*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_4[ind]
 
-	with h5py.File("./profile{}/tide_orbit.h5".format(pind-1), "a") as hf:
+	with h5py.File("{}/step{}/tide_orbit.h5".format(orbev_fodir,pind-1), "a") as hf:
 		hf.create_dataset("o_dot_freq", data=o_dots)
 		hf.create_dataset("o_dot", data=[np.sum(o_dots)])
 

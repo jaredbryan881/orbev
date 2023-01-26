@@ -27,6 +27,7 @@ def main():
 	pind=int(sys.argv[2])
 	cur_dir=sys.argv[3]
 	cur_param_ind=int(sys.argv[4])
+	orbev_fodir=sys.argv[5]
 
 	# Read stellar history file
 	sh_finame="{}/LOGS/history_full.data".format(cur_path)
@@ -62,7 +63,7 @@ def main():
 
 	# read tides output
 	print("Loading tide_orbit")
-	with h5py.File("./profile{}/tide_orbit.h5".format(pind-1), "r") as hf:
+	with h5py.File("{}/step{}/tide_orbit.h5".format(orbev_fodir, pind-1), "r") as hf:
 		# orbital parameters
 		Omega_orb=hf["Omega_orb"][0]*fs
 
