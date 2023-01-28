@@ -3,9 +3,6 @@
 # path to directory containing orbev collection
 base_fidir="/home/jared/MIT/astero/gyre_HATP2/orbev"
 
-# path to place we'll save files to
-base_fodir="/home/jared/MIT/astero/gyre_HATP2/orbev/output"
-
 # current parameters
 m=$1
 z=$2

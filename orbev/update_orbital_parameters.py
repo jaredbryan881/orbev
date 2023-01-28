@@ -63,20 +63,20 @@ def main():
 
 	# read tides output
 	print("Loading tide_orbit")
-	with h5py.File("{}/step{}/tide_orbit.h5".format(orbev_fodir, pind-1), "r") as hf:
+	with h5py.File("{}/tidal_response_history.h5".format(orbev_fodir), "r") as hf:
 		# orbital parameters
-		Omega_orb=hf["Omega_orb"][0]*fs
+		Omega_orb=hf["Omega_orb"][-1]*fs
 
 		a=OmegaOrb_to_a(Omega_orb, cur_M)
 
-		e=hf["e"][0]
+		e=hf["e"][-1]
 
 		# orbital evolution rates
-		edot=hf["e_dot"][0]*fs*365 # 1/yr
+		edot=hf["e_dot"][-1]*fs*365 # 1/yr
 
-		adot=hf["a_dot"][0]*fs*365*cur_R*(Rsun/au) # au/yr
+		adot=hf["a_dot"][-1]*fs*365*cur_R*(Rsun/au) # au/yr
 
-		Jdot=hf["J_dot"][0]*fs*365 # 1/yr
+		Jdot=hf["J_dot"][-1]*fs*365 # 1/yr
 		Jdot*=(cur_R**(1/2) * ((G*(Rsun**3)/Msun)**(1/2))*86400 * cur_M**(3/2)) # Msun*Rsun**2*cyc/day/yr
 		profile, header = load_profile("./profile_cur.data.GYRE")
 

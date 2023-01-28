@@ -7,7 +7,7 @@ export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
 base_fidir="/home/jared/MIT/astero/gyre_HATP2/orbev"
 
 # path to directory we'll run code from
-base_work_dir="/home/jared/MIT/astero/gyre_HATP2/orbev"
+base_work_dir="/home/jared/MIT/astero/gyre_HATP2/orbev/work"
 
 # path to place we'll save files to
 base_fodir="/home/jared/MIT/astero/gyre_HATP2/orbev/output"
@@ -20,7 +20,7 @@ job_n=${3-0} # take command line arg or else just label it as 0
 # create a place to work
 # Path to MESA model for the current mass/metallicity
 cur_star="M${m}_Z${z}"
-cur_star_path="${base_work_dir}/work/${cur_star}"
+cur_star_path="${base_work_dir}/${cur_star}"
 # Path to MESA model for the current orbit, a copy of the one at cur_star_path
 cur_orbit="orb${job_n}"
 cur_orbit_path="${cur_star_path}_${cur_orbit}"
@@ -90,11 +90,8 @@ do
 
 	# get a fresh gyre inlist
 	cp ${base_fidir}/base_setup/gyre_base_setup/gyre_tides.in .
-
-	if ((i>1)); then
-		# calculate secular rates of change
-		python calculate_orbev.py ${orbev_fodir} $i
-	fi
+	tide_foname="${orbev_fodir}/tide_orbit.h5"
+	sed -i "s:summary_file\s=\s.*:summary_file = '${tide_foname}':g" gyre_tides.in
 
 	# update the orbital parameters in the gyre inlist
 	python update_orbital_parameters.py ${cur_orbit_path} $i $cur_star ${job_n} ${orbev_fodir}
@@ -105,8 +102,8 @@ do
 		echo "Running new segment of the MESA model at step $i"
 
 		# clean up LOGS and photo directories
-		rm ${cur_orbit_path}/LOGS/profile*
-		rm ${cur_orbit_path}/LOGS/history.data
+		rm ${orbev_fodir}/profile*
+		rm ${orbev_fodir}/history.data
 
 		python prepare_mesa_segment.py ${cur_orbit_path} $i
 		mesa_prep_exit_status=$?
@@ -148,21 +145,23 @@ do
 	# Calculate the orbtial evolution rates
 	$GYRE_DIR/bin/gyre_tides gyre_tides.in
 
-	# clean up the current directory
-	# get rid of the gyre inlist
-	rm gyre_tides.in
-	# move output files to profile directory
-	mkdir ${orbev_fodir}/step$i
-	mv tide_orbit.h5 ${orbev_fodir}/step$i   # move forced oscillation summary
+	# calculate secular rates of change and concatenate into a response history
+	python calculate_orbev.py ${orbev_fodir} $i
 
-	# break if the directory is empty
-	if [ "$(ls -A ${orbev_fodir}/step$i)" ]; then
-		echo "tide_orbit.h5 was stored successfully for profile$i"
+	# break if no response was created
+	repackage_status=$?
+	if [ "${repackage_status}" -eq 0 ]; then
+		echo "tide_orbit.h5 was created successfully at step $i"
 	else
 		echo "tide_orbit.h5 not created, exiting."
-		rmdir ${orbev_fodir}/step$i
 		break
 	fi
+
+	# clean up the current directory
+	# get rid of the gyre inlist and tides_output.h5
+	rm gyre_tides.in
+	rm ${orbev_fodir}/tide_orbit.h5
+
 done
 
 cd ${base_fidir}
