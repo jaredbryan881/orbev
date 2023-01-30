@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export MESA_DIR=/home/jared/MIT/astero/mesa
+export MESASDK_ROOT=/home/jared/MIT/astero/mesasdk
+source $MESASDK_ROOT/bin/mesasdk_init.sh
+export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
+
+
 Ms=(1.35 1.35)
 Zs=(0.028 0.028)
 
