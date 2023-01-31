@@ -80,18 +80,18 @@ def main():
 	J_dots=np.zeros((n_l,n_m,n_k))
 
 	# fundamental parameters used to calculate orbev rates
-	Gbar_1_arr=np.zeros((n_l,n_m,n_k))
-	Gbar_2_arr=np.zeros((n_l,n_m,n_k))
-	Gbar_3_arr=np.zeros((n_l,n_m,n_k))
-	Gbar_4_arr=np.zeros((n_l,n_m,n_k))
-	cbar_arr=np.zeros((n_l,n_m,n_k))
-	eul_Phi_ref_arr=np.zeros((n_l,n_m,n_k))
-	eul_Psi_ref_arr=np.zeros((n_l,n_m,n_k))
-	Phi_T_ref_arr=np.zeros((n_l,n_m,n_k))
+	Gbar_1_temp=np.zeros((n_l,n_m,n_k))
+	Gbar_2_temp=np.zeros((n_l,n_m,n_k))
+	Gbar_3_temp=np.zeros((n_l,n_m,n_k))
+	Gbar_4_temp=np.zeros((n_l,n_m,n_k))
+	cbar_temp=np.zeros((n_l,n_m,n_k))
+	eul_Phi_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
+	eul_Psi_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
+	Phi_T_ref_temp=np.zeros((n_l,n_m,n_k))
 
 	# surface response
-	xi_r_ref_arr=np.zeros((n_l,n_m,n_k))
-	lag_L_ref_arr=np.zeros((n_l,n_m,n_k))
+	xi_r_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
+	lag_L_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
 
 	for ind in range(len(l)):
 		# locate the current mode
@@ -114,39 +114,29 @@ def main():
 		e_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_3[ind]
 		J_dots[i_l,i_m,i_k] = 4*Omega_orb*q**2/np.sqrt(R_a*(1+q))*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_4[ind]
 
-		Gbar_1_arr[i_l,i_m,i_k]      = Gbar_1[ind]
-		Gbar_2_arr[i_l,i_m,i_k]      = Gbar_2[ind]
-		Gbar_3_arr[i_l,i_m,i_k]      = Gbar_3[ind]
-		Gbar_4_arr[i_l,i_m,i_k]      = Gbar_4[ind]
-		cbar_arr[i_l,i_m,i_k]        = cbar[ind]
-		#eul_Phi_ref_arr[i_l,i_m,i_k] = eul_Phi_ref[ind]
-		#eul_Psi_ref_arr[i_l,i_m,i_k] = eul_Psi_ref[ind]
-		#Phi_T_ref_arr[i_l,i_m,i_k]   = Phi_T_ref[ind]
+		Gbar_1_temp[i_l,i_m,i_k] = Gbar_1[ind]
+		Gbar_2_temp[i_l,i_m,i_k] = Gbar_2[ind]
+		Gbar_3_temp[i_l,i_m,i_k] = Gbar_3[ind]
+		Gbar_4_temp[i_l,i_m,i_k] = Gbar_4[ind]
+		cbar_temp[i_l,i_m,i_k] = cbar[ind]
+		
+		eul_Phi_ref_temp[i_l,i_m,i_k] = eul_Phi_ref[ind][0]+eul_Phi_ref[ind][1]*1j
+		eul_Psi_ref_temp[i_l,i_m,i_k] = eul_Psi_ref[ind][0]+eul_Psi_ref[ind][1]*1j
+		Phi_T_ref_temp[i_l,i_m,i_k] = Phi_T_ref[ind]
 
-		xi_r_ref_arr=xi_r_ref[ind]
-		lag_L_ref_arr=lag_L_ref[ind]
+		xi_r_ref_temp[i_l,i_m,i_k] = xi_r_ref[ind][0]+xi_r_ref[ind][1]*1j
+		lag_L_ref_temp[i_l,i_m,i_k] = lag_L_ref[ind][0]+lag_L_ref[ind][1]*1j
 
-	Gbar_1=Gbar_1_arr
-	Gbar_2=Gbar_2_arr
-	Gbar_3=Gbar_3_arr
-	Gbar_4=Gbar_4_arr
-	cbar=cbar_arr
-	eul_Phi_ref=eul_Phi_ref_arr
-	eul_Psi_ref=eul_Psi_ref_arr
-	Phi_T_ref=Phi_T_ref_arr
-	xi_r_ref=xi_r_ref_arr
-	lag_L_ref=lag_L_ref_arr
-	# reshape flattened arrays
-	#Gbar_1=Gbar_1.reshape((n_l,n_m,n_k))
-	#Gbar_2=Gbar_2.reshape((n_l,n_m,n_k))
-	#Gbar_3=Gbar_3.reshape((n_l,n_m,n_k))
-	#Gbar_4=Gbar_4.reshape((n_l,n_m,n_k))
-	#cbar=cbar.reshape((n_l,n_m,n_k))
-	#eul_Phi_ref=eul_Phi_ref.reshape((n_l,n_m,n_k))
-	#eul_Psi_ref=eul_Psi_ref.reshape((n_l,n_m,n_k))
-	#Phi_T_ref=Phi_T_ref.reshape((n_l,n_m,n_k))
-	#xi_r_ref=xi_r_ref.reshape((n_l,n_m,n_k))
-	#lag_L_ref=lag_L_ref.reshape((n_l,n_m,n_k))
+	Gbar_1=Gbar_1_temp
+	Gbar_2=Gbar_2_temp
+	Gbar_3=Gbar_3_temp
+	Gbar_4=Gbar_4_temp
+	cbar=cbar_temp
+	eul_Phi_ref=eul_Phi_ref_temp
+	eul_Psi_ref=eul_Psi_ref_temp
+	Phi_T_ref=Phi_T_ref_temp
+	xi_r_ref=xi_r_ref_temp
+	lag_L_ref=lag_L_ref_temp
 
 	if os.path.exists("{}/tidal_response_history.h5".format(orbev_fodir)):
 		# Resize datasets and append current values
