@@ -30,6 +30,7 @@ def main():
 		sys.exit(0)
 	else:
 		# out of bounds
+		print("Time ({} Myr) out of bounds ({}-{} Myr)".format(cur_time/1e6, h.star_age[0]/1e6, h.star_age[-1]/1e6))
 		sys.exit(1)
 
 if __name__=="__main__":

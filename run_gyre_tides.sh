@@ -84,7 +84,7 @@ python clean_photo_album.py ${cur_orbit_path}
 python calculate_Is.py ${orbev_fodir}
 
 # take some finite number of steps
-for i in {1..1000}
+for i in {1..10000}
 do
 	echo $i
 
@@ -161,7 +161,13 @@ do
 	# get rid of the gyre inlist and tides_output.h5
 	rm gyre_tides.in
 	rm ${orbev_fodir}/tide_orbit.h5
-
 done
 
+# clean up output directory
+rm ${orbev_fodir}/profile*
+rm ${orbev_fodir}/history.data
+
+cp ${cur_orbit_path}/orbital_history.data ${orbev_fodir}/
+
+# return to home dir
 cd ${base_fidir}
