@@ -32,7 +32,7 @@ def main():
 		save_profile(p,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
-		p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, num2+1))
+		p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum2+1))
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(p,header)
 	else:
