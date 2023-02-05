@@ -104,6 +104,7 @@ do
 		# clean up LOGS and photo directories
 		rm ${orbev_fodir}/profile*
 		rm ${orbev_fodir}/history.data
+		rm ${cur_orbit_path}/photos/photo_cur
 
 		python prepare_mesa_segment.py ${cur_orbit_path} $i
 		mesa_prep_exit_status=$?

@@ -50,6 +50,7 @@ def main():
 		# we communicate with the bash script via exit codes.
 		sys.exit(1)
 	else:
+		print("Renaming photo {} to photo_cur".format(photo_string))
 		# otherwise let's find and copy the current photo into something generically runnable by the bash script
 		shutil.copy("{}/photos/{}".format(cur_path,photo_string), "{}/photos/photo_cur".format(cur_path))
 		sys.exit(0)
@@ -80,7 +81,7 @@ def get_nearest_photo(cur_path, cur_time):
 	# interpret the photo name as an integer for association with model_number
 	photo_model_num = [int(photo.split('x')[-1]) for photo in photo_list]
 	photo_model_ind = [pmn-sh.model_number[0] for pmn in photo_model_num]
-	photo_interval=np.diff(sorted(photo_model_num))[0]
+	photo_interval = np.diff(sorted(photo_model_num))[0]
 
 	# we want to get the closest photo to cur_time, but also earlier than cur_time
 	# first let's get the stellar age at each photo
