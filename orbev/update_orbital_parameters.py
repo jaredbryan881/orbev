@@ -29,11 +29,11 @@ def main():
 	cur_param_ind=int(sys.argv[4])
 	orbev_fodir=sys.argv[5]
 
-	# Read stellar history file
-	sh_finame="{}/LOGS/history_full.data".format(cur_path)
-	sh=mr.MesaData(sh_finame)
-
 	if pind==1:
+		# Read stellar history file
+		sh_finame="{}/LOGS/history_full.data".format(cur_path)
+		sh=mr.MesaData(sh_finame)
+		
 		# Initialize orbital configuration in the GYRE inlist
 		update_orbital_parameters(params.OmegaOrb0[cur_param_ind], params.OmegaRot0[cur_param_ind], params.e0[cur_param_ind], params.gyre_inlist)
 		# Initialize orbital configuration history file
