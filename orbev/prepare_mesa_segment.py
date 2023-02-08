@@ -25,7 +25,7 @@ def main():
 			# load stellar history and use the age at ZAMS
 			sh_finame="{}/LOGS/history_full.data".format(cur_path)
 			sh=mr.MesaData(sh_finame)
-			params.t0=np.ceil(sh.star_age[0])
+			params.t0=np.ceil(np.min(sh.star_age))
 		cur_time=params.t0
 	else:
 		# load current time
@@ -48,6 +48,7 @@ def main():
 		# if no photo_string is given, then we are earlier than the first photo.
 		# since we can't restart a photo, we have to do something different in the bash script.
 		# we communicate with the bash script via exit codes.
+		print("Couldn't find a preceding photo.")
 		sys.exit(1)
 	else:
 		print("Renaming photo {} to photo_cur".format(photo_string))
