@@ -18,6 +18,8 @@ def main():
 
 	cur_path=sys.argv[1]
 	pind=int(sys.argv[2])
+	cur_param_ind=int(sys.argv[3])
+
 	# get the current time
 	if pind==0:
 		# load initial time

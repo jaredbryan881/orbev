@@ -37,9 +37,11 @@ if [ ! -d "${cur_orbit_path}" ]; then
 	# get glue scripts
 	cp -r ${base_fidir}/orbev/* ${cur_orbit_path}
 	# copy the initial orbital conditions and update-parameters
-	cp ${base_fidir}/base_setup/gyre_base_setup/params.py ${cur_orbit_path}
+	cp ${base_fidir}/base_setup/gyre_base_setup/params.* ${cur_orbit_path}
 fi
 cd ${cur_orbit_path}
+
+# edit the history file to save just the stellar age
 
 # reformat the inlist to save every profile but no photos
 sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
@@ -56,7 +58,7 @@ python create_photo_album.py ${cur_orbit_path}
 # if we aren't storing every profile, we need to generate the current chunk
 # copy the correct photo or return an exit 1
 # and edit the inlist_MS with the new max_model_num
-python prepare_mesa_segment.py ${cur_orbit_path} 0
+python prepare_mesa_segment.py ${cur_orbit_path} 0 ${job_n}
 mesa_prep_exit_status=$?
 if [ "${mesa_prep_exit_status}" -eq 0 ]; then
 	echo "Restarting from current photo"
@@ -105,7 +107,7 @@ do
 		rm ${orbev_fodir}/profile*
 		rm ${orbev_fodir}/history.data
 
-		python prepare_mesa_segment.py ${cur_orbit_path} $i
+		python prepare_mesa_segment.py ${cur_orbit_path} $i ${job_n}
 		mesa_prep_exit_status=$?
 		if [ "${mesa_prep_exit_status}" -eq 0 ]; then
 			# photo found successfully and inlist_MS modified
@@ -166,7 +168,9 @@ done
 # clean up output directory
 rm ${orbev_fodir}/profile*
 rm ${orbev_fodir}/history.data
+rm ${orbev_fodir}/stellar_MOIs.txt
 
+# get the history of orbital paramters
 cp ${cur_orbit_path}/orbital_history.data ${orbev_fodir}/
 
 # return to home dir
