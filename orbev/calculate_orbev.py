@@ -1,8 +1,7 @@
-import os
-import sys
-import h5py
 import numpy as np
-import matplotlib.pyplot as plt
+import h5py
+import sys
+import os
 
 import pygyre as pg
 
@@ -16,11 +15,12 @@ def main():
 	# Extract the first set of responses
 	sg = s.group_by('id').groups[0]
 
-	Omega_orb = sg['Omega_orb']               
+	Omega_orb = sg['Omega_orb']  
 	R_a = sg['R_a']
 	q = sg['q']
+	e = sg['e']
 
-	eps_T = R_a**3*q
+	eps_T = (R_a**3)*q
 
 	l = sg['l']
 	m = sg['m']
@@ -28,7 +28,7 @@ def main():
 
 	cbar = sg['cbar']
 
-	Fbar = -0.5*sg['eul_Phi_ref']/(cbar*eps_T)
+	Fbar = -(1/2)*sg['eul_Phi_ref']/(cbar*eps_T)
 
 	x = sg['x_ref']
 
@@ -37,184 +37,80 @@ def main():
 	Gbar_3 = sg['Gbar_3']
 	Gbar_4 = sg['Gbar_4']
 
+	# radial displacement perturbation at reference location
+	xi_r_ref=sg["xi_r_ref"]
+	xi_r_ref=xi_r_ref.real + 1j*xi_r_ref.imag
+	# Lagrangian radiative luminosity perturbation at reference location
+	lag_L_ref=sg["lag_L_ref"]
+	lag_L_ref=lag_L_ref.real + 1j*lag_L_ref.imag
+
 	kap = np.empty(len(l))
-
 	for i in range(len(kap)):
-		if k[i] == 0:
-			if m[i] == 0:
-				kap[i] = 0.5
-			elif m[i] > 0 and m[i] <= l[i]:
-				kap[i] = 1.
-			else:
-				kap[i] = 0.
-		elif k[i] > 0:
-			kap[i] = 1.
-		else:
-			kap[i] = 0.
+		kap[i]=get_kappa(m[i], k[i])
 
-	# Semi-major axis (units of R per dynamical timescale)
-	a_dot = np.sum(4. * Omega_orb * q / R_a * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_2)
-	
-	# Eccentricity (units of per dynamical timescale)
-	e_dot = np.sum(4. * Omega_orb * q * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_3)
-	
 	# Argument of periastron (units of radians per dynamical timescale)
-	pom_dot = np.sum(4. * Omega_orb * q * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.real * Gbar_1)
-	
+	o_dots = 4*Omega_orb*q * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.real * Gbar_1
+	# Semi-major axis (units of R per dynamical timescale)
+	a_dots = 4*Omega_orb*(q/R_a) * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_2
+	# Eccentricity (units of per dynamical timescale)
+	e_dots = 4*Omega_orb*q * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_3
 	# Angular momentum (units of GM^2/R)
-	J_dot = np.sum(4. * q**2 * R_a *(R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_4)
+	J_dots = 4*(q**2)*R_a * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_4
 
-def other():
-	# load command line arguments
-	orbev_fodir=sys.argv[1]
-	pind=int(sys.argv[2])
+	# reshape arrays to keep only m=-2,0,2
+	# odots
+	o_dots=np.reshape(o_dots, (1,5,51))
+	o_dots=o_dots[:,[0,2,4],:]
+	# adots
+	a_dots=np.reshape(a_dots, (1,5,51))
+	a_dots=a_dots[:,[0,2,4],:]
+	# edots
+	e_dots=np.reshape(e_dots, (1,5,51))
+	e_dots=e_dots[:,[0,2,4],:]
+	# Jdots
+	J_dots=np.reshape(J_dots, (1,5,51))
+	J_dots=J_dots[:,[0,2,4],:]
 
-	try:
-		with h5py.File("{}/tide_orbit.h5".format(orbev_fodir), "r") as hf:
-			# harmonic degree
-			l=hf["l"][:]
-			# azimuthal order
-			m=hf["m"][:]
-			# Fourier harmonic
-			k=hf["k"][:]
+	# 
+	cbar=np.reshape(cbar, (1,5,51))
+	cbar=cbar[:,[0,2,4],:]
+	#
+	Fbar=np.reshape(Fbar, (1,5,51))
+	Fbar=Fbar[:,[0,2,4],:]
+	#
+	Gbar_1=np.reshape(Gbar_1, (1,5,51))
+	Gbar_1=Gbar_1[:,[0,2,4],:]
+	Gbar_2=np.reshape(Gbar_2, (1,5,51))
+	Gbar_2=Gbar_2[:,[0,2,4],:]
+	Gbar_3=np.reshape(Gbar_3, (1,5,51))
+	Gbar_3=Gbar_3[:,[0,2,4],:]
+	Gbar_4=np.reshape(Gbar_4, (1,5,51))
+	Gbar_4=Gbar_4[:,[0,2,4],:]
 
-			# ratio of secondary mass to primary mass
-			q=hf["q"][:]
-			# ratio of primary radius to orbital semi-major axis
-			R_a=hf["R_a"][:]
-			# orbital frequency
-			Omega_orb=hf["Omega_orb"][:]
-			# orbital eccentricity
-			e=hf["e"][:]
+	# radial displacement
+	xi_r_ref=np.reshape(xi_r_ref, (1,5,51))
+	xi_r_ref=xi_r_ref[:,[0,2,4],:]
+	# lagrangian radiative luminosity perturbation
+	lag_L_ref=np.reshape(lag_L_ref, (1,5,51))
+	lag_L_ref=lag_L_ref[:,[0,2,4],:]
 
-			# secular evolution coefficients (G factors) (see Willems et al., 2010)
-			Gbar_1=hf["Gbar_1"][:]
-			Gbar_2=hf["Gbar_2"][:]
-			Gbar_3=hf["Gbar_3"][:]
-			Gbar_4=hf["Gbar_4"][:]
-
-			# tidal expansion coefficient (eqn. A1 of Sun et al., 2023)
-			cbar=hf["cbar"][:]
-			# Eulerian total potential perturbation at reference location
-			eul_Psi_ref=hf["eul_Psi_ref"][:]
-			# Eulerian potential perturbation at reference location
-			eul_Phi_ref=hf["eul_Phi_ref"][:]
-			# tidal potential at reference location
-			Phi_T_ref=hf["Phi_T_ref"][:]
-
-			# radial displacement perturbation at reference location
-			xi_r_ref=hf["xi_r_ref"][:]
-			# Lagrangian radiative luminosity perturbation at reference location
-			lag_L_ref=hf["lag_L_ref"][:]
-	except OSError as ex:
-		# provide exit code to stop simulation
-		print("Failed to load tide_orbit.h5")
-		sys.exit(1)
-
-	# orbital parameters
-	Omega_orb=Omega_orb[0]
-	R_a=R_a[0]
-	q=q[0]
-	e=e[0]
-	eps_tide=(R_a**3)*q
-
-	# calculate eulerian perturbation to the gravitational potential
-	eul_Psi_ref_temp=np.zeros(len(eul_Psi_ref), dtype=np.complex128)
-	for i in range(len(eul_Psi_ref)):
-		eul_Psi_ref_temp[i] = eul_Psi_ref[i][0] + 1j*eul_Psi_ref[i][1]
-	eul_phi=eul_Psi_ref_temp
-	eul_phi.real-=Phi_T_ref
-
-	lun=np.unique(l)
-	mun=np.unique(m)
-	kun=np.unique(k)
-
-	n_l=len(lun)
-	n_m=len(mun)
-	n_k=len(kun)
-
-	# orbev rates
-	o_dots=np.zeros((n_l,n_m,n_k))
-	a_dots=np.zeros((n_l,n_m,n_k))
-	e_dots=np.zeros((n_l,n_m,n_k))
-	J_dots=np.zeros((n_l,n_m,n_k))
-
-	# fundamental parameters used to calculate orbev rates
-	Gbar_1_temp=np.zeros((n_l,n_m,n_k))
-	Gbar_2_temp=np.zeros((n_l,n_m,n_k))
-	Gbar_3_temp=np.zeros((n_l,n_m,n_k))
-	Gbar_4_temp=np.zeros((n_l,n_m,n_k))
-	cbar_temp=np.zeros((n_l,n_m,n_k))
-	eul_Phi_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
-	eul_Psi_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
-	Phi_T_ref_temp=np.zeros((n_l,n_m,n_k))
-
-	# surface response
-	xi_r_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
-	lag_L_ref_temp=np.zeros((n_l,n_m,n_k), dtype=complex)
-
-	for ind in range(len(l)):
-		# locate the current mode
-		i_l = np.where(lun==l[ind])[0]
-		i_m = np.where(mun==m[ind])[0]
-		i_k = np.where(kun==k[ind])[0]
-
-		c=cbar[ind]
-		kappa=get_kappa(m[ind], k[ind])
-		if (c==0) or (kappa==0):
-			continue
-
-		# calculate tidal response amplitude and phase
-		F = -(1/2)*(np.sqrt(4*np.pi)*eul_phi[ind]/(eps_tide*c) + 1)
-		gamma = np.arctan2(np.imag(F), np.real(F))
-
-		# calculate orbital evolution rates
-		o_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.real(F)*Gbar_1[ind]
-		a_dots[i_l,i_m,i_k] = 4*Omega_orb*(q/R_a)*(R_a)**(l[ind]+3)*kappa*np.imag(F)*Gbar_2[ind]
-		e_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.imag(F)*Gbar_3[ind]
-		J_dots[i_l,i_m,i_k] = 4*Omega_orb*q**2/np.sqrt(R_a*(1+q))*(R_a)**(l[ind]+3)*kappa*np.imag(F)*Gbar_4[ind]
-
-		Gbar_1_temp[i_l,i_m,i_k] = Gbar_1[ind]
-		Gbar_2_temp[i_l,i_m,i_k] = Gbar_2[ind]
-		Gbar_3_temp[i_l,i_m,i_k] = Gbar_3[ind]
-		Gbar_4_temp[i_l,i_m,i_k] = Gbar_4[ind]
-		cbar_temp[i_l,i_m,i_k] = cbar[ind]
-		
-		eul_Phi_ref_temp[i_l,i_m,i_k] = eul_Phi_ref[ind][0]+eul_Phi_ref[ind][1]*1j
-		eul_Psi_ref_temp[i_l,i_m,i_k] = eul_Psi_ref[ind][0]+eul_Psi_ref[ind][1]*1j
-		Phi_T_ref_temp[i_l,i_m,i_k] = Phi_T_ref[ind]
-
-		xi_r_ref_temp[i_l,i_m,i_k] = xi_r_ref[ind][0]+xi_r_ref[ind][1]*1j
-		lag_L_ref_temp[i_l,i_m,i_k] = lag_L_ref[ind][0]+lag_L_ref[ind][1]*1j
-
-	Gbar_1=Gbar_1_temp
-	Gbar_2=Gbar_2_temp
-	Gbar_3=Gbar_3_temp
-	Gbar_4=Gbar_4_temp
-	cbar=cbar_temp
-	eul_Phi_ref=eul_Phi_ref_temp
-	eul_Psi_ref=eul_Psi_ref_temp
-	Phi_T_ref=Phi_T_ref_temp
-	xi_r_ref=xi_r_ref_temp
-	lag_L_ref=lag_L_ref_temp
-
-	quit()
+	# Write data
 	if os.path.exists("{}/tidal_response_history.h5".format(orbev_fodir)):
 		# Resize datasets and append current values
 		with h5py.File("{}/tidal_response_history.h5".format(orbev_fodir), "a") as hf:
 			# Append current orbital parameters
 			# ratio of secondary mass to primary mass
 			hf["q"].resize((hf["q"].shape[0]+1), axis=0)
-			hf["q"][-1]=np.array([q])
+			hf["q"][-1]=np.array([q[0]])
 			# ratio of primary radius to semi-major axis
 			hf["R_a"].resize((hf["R_a"].shape[0]+1), axis=0)
-			hf["R_a"][-1]=np.array([R_a])
+			hf["R_a"][-1]=np.array([R_a[0]])
 			# orbital frequency
 			hf["Omega_orb"].resize((hf["Omega_orb"].shape[0]+1), axis=0)
-			hf["Omega_orb"][-1]=np.array([Omega_orb])
+			hf["Omega_orb"][-1]=np.array([Omega_orb[0]])
 			# eccentricity
 			hf["e"].resize((hf["e"].shape[0]+1), axis=0)
-			hf["e"][-1]=np.array([e])
+			hf["e"][-1]=np.array([e[0]])
 
 			# Append rate-changes in orbital parameters
 			# argument of periastron
@@ -249,12 +145,8 @@ def other():
 			hf["Gbar_4"][-1]=Gbar_4
 			hf["cbar"].resize((hf["cbar"].shape[0]+1), axis=0)
 			hf["cbar"][-1]=cbar
-			hf["eul_Phi_ref"].resize((hf["eul_Phi_ref"].shape[0]+1), axis=0)
-			hf["eul_Phi_ref"][-1]=eul_Phi_ref
-			hf["eul_Psi_ref"].resize((hf["eul_Psi_ref"].shape[0]+1), axis=0)
-			hf["eul_Psi_ref"][-1]=eul_Psi_ref
-			hf["Phi_T_ref"].resize((hf["Phi_T_ref"].shape[0]+1), axis=0)
-			hf["Phi_T_ref"][-1]=Phi_T_ref
+			hf["Fbar"].resize((hf["Fbar"].shape[0]+1), axis=0)
+			hf["Fbar"][-1]=Fbar
 
 			# Append the surface response
 			hf["xi_r_ref"].resize((hf["xi_r_ref"].shape[0]+1), axis=0)
@@ -269,15 +161,15 @@ def other():
 		# creating datasets with maxshape=None allows them to be resized later
 		with h5py.File("{}/tidal_response_history.h5".format(orbev_fodir), "a") as hf:
 			# save the unique mode descriptors only once
-			hf.create_dataset("l", data=lun)
-			hf.create_dataset("m", data=mun)
-			hf.create_dataset("k", data=kun)
+			hf.create_dataset("l", data=np.unique(l))
+			hf.create_dataset("m", data=np.unique(m))
+			hf.create_dataset("k", data=np.unique(k))
 
 			# save current orbital parameters
-			hf.create_dataset("q", data=np.array([np.sum(q)])[...,np.newaxis], chunks=True, maxshape=(None, 1))
-			hf.create_dataset("R_a", data=np.array([np.sum(R_a)])[...,np.newaxis], chunks=True, maxshape=(None, 1))
-			hf.create_dataset("Omega_orb", data=np.array([np.sum(Omega_orb)])[...,np.newaxis], chunks=True, maxshape=(None, 1))
-			hf.create_dataset("e", data=np.array([np.sum(e)])[...,np.newaxis], chunks=True, maxshape=(None, 1))
+			hf.create_dataset("q", data=np.array([np.sum(q[0])])[...,np.newaxis], chunks=True, maxshape=(None, 1))
+			hf.create_dataset("R_a", data=np.array([np.sum(R_a[0])])[...,np.newaxis], chunks=True, maxshape=(None, 1))
+			hf.create_dataset("Omega_orb", data=np.array([np.sum(Omega_orb[0])])[...,np.newaxis], chunks=True, maxshape=(None, 1))
+			hf.create_dataset("e", data=np.array([np.sum(e[0])])[...,np.newaxis], chunks=True, maxshape=(None, 1))
 
 			# save orbital evolution rates
 			# change in argument of periastron
@@ -299,9 +191,7 @@ def other():
 			hf.create_dataset("Gbar_3", data=Gbar_3, chunks=True, maxshape=(None, *Gbar_3.shape[1:]))
 			hf.create_dataset("Gbar_4", data=Gbar_4, chunks=True, maxshape=(None, *Gbar_4.shape[1:]))
 			hf.create_dataset("cbar", data=cbar, chunks=True, maxshape=(None, *cbar.shape[1:]))
-			hf.create_dataset("eul_Phi_ref", data=eul_Phi_ref, chunks=True, maxshape=(None, *eul_Phi_ref.shape[1:]))
-			hf.create_dataset("eul_Psi_ref", data=eul_Psi_ref, chunks=True, maxshape=(None, *eul_Psi_ref.shape[1:]))
-			hf.create_dataset("Phi_T_ref", data=Phi_T_ref, chunks=True, maxshape=(None, *Phi_T_ref.shape[1:]))
+			hf.create_dataset("Fbar", data=Fbar, chunks=True, maxshape=(None, *Fbar.shape[1:]))
 
 			# save the surface response (displacement and flux perturbation)
 			hf.create_dataset("xi_r_ref", data=xi_r_ref, chunks=True, maxshape=(None, *xi_r_ref.shape[1:]))
