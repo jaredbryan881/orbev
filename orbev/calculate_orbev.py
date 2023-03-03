@@ -4,7 +4,67 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 
+import pygyre as pg
+
 def main():
+	# load command line arguments
+	orbev_fodir=sys.argv[1]
+	pind=int(sys.argv[2])
+
+	s=pg.read_output("{}/tide_orbit.h5".format(orbev_fodir))
+
+	# Extract the first set of responses
+	sg = s.group_by('id').groups[0]
+
+	Omega_orb = sg['Omega_orb']               
+	R_a = sg['R_a']
+	q = sg['q']
+
+	eps_T = R_a**3*q
+
+	l = sg['l']
+	m = sg['m']
+	k = sg['k']
+
+	cbar = sg['cbar']
+
+	Fbar = -0.5*sg['eul_Phi_ref']/(cbar*eps_T)
+
+	x = sg['x_ref']
+
+	Gbar_1 = sg['Gbar_1']
+	Gbar_2 = sg['Gbar_2']
+	Gbar_3 = sg['Gbar_3']
+	Gbar_4 = sg['Gbar_4']
+
+	kap = np.empty(len(l))
+
+	for i in range(len(kap)):
+		if k[i] == 0:
+			if m[i] == 0:
+				kap[i] = 0.5
+			elif m[i] > 0 and m[i] <= l[i]:
+				kap[i] = 1.
+			else:
+				kap[i] = 0.
+		elif k[i] > 0:
+			kap[i] = 1.
+		else:
+			kap[i] = 0.
+
+	# Semi-major axis (units of R per dynamical timescale)
+	a_dot = np.sum(4. * Omega_orb * q / R_a * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_2)
+	
+	# Eccentricity (units of per dynamical timescale)
+	e_dot = np.sum(4. * Omega_orb * q * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_3)
+	
+	# Argument of periastron (units of radians per dynamical timescale)
+	pom_dot = np.sum(4. * Omega_orb * q * (R_a)**(l+3) * (x)**(l+1) * kap * Fbar.real * Gbar_1)
+	
+	# Angular momentum (units of GM^2/R)
+	J_dot = np.sum(4. * q**2 * R_a *(R_a)**(l+3) * (x)**(l+1) * kap * Fbar.imag * Gbar_4)
+
+def other():
 	# load command line arguments
 	orbev_fodir=sys.argv[1]
 	pind=int(sys.argv[2])
@@ -109,10 +169,10 @@ def main():
 		gamma = np.arctan2(np.imag(F), np.real(F))
 
 		# calculate orbital evolution rates
-		o_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.cos(gamma)*Gbar_1[ind]
-		a_dots[i_l,i_m,i_k] = 4*Omega_orb*(q/R_a)*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_2[ind]
-		e_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_3[ind]
-		J_dots[i_l,i_m,i_k] = 4*Omega_orb*q**2/np.sqrt(R_a*(1+q))*(R_a)**(l[ind]+3)*kappa*np.abs(F)*np.sin(gamma)*Gbar_4[ind]
+		o_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.real(F)*Gbar_1[ind]
+		a_dots[i_l,i_m,i_k] = 4*Omega_orb*(q/R_a)*(R_a)**(l[ind]+3)*kappa*np.imag(F)*Gbar_2[ind]
+		e_dots[i_l,i_m,i_k] = 4*Omega_orb*q*(R_a)**(l[ind]+3)*kappa*np.imag(F)*Gbar_3[ind]
+		J_dots[i_l,i_m,i_k] = 4*Omega_orb*q**2/np.sqrt(R_a*(1+q))*(R_a)**(l[ind]+3)*kappa*np.imag(F)*Gbar_4[ind]
 
 		Gbar_1_temp[i_l,i_m,i_k] = Gbar_1[ind]
 		Gbar_2_temp[i_l,i_m,i_k] = Gbar_2[ind]
@@ -138,6 +198,7 @@ def main():
 	xi_r_ref=xi_r_ref_temp
 	lag_L_ref=lag_L_ref_temp
 
+	quit()
 	if os.path.exists("{}/tidal_response_history.h5".format(orbev_fodir)):
 		# Resize datasets and append current values
 		with h5py.File("{}/tidal_response_history.h5".format(orbev_fodir), "a") as hf:
