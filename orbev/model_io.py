@@ -45,7 +45,8 @@ def load_profile(finame):
 		Dictionary of np.array data vectors
 	:return header:
 	"""
-	data=np.loadtxt(finame, skiprows=1)
+	header=np.loadtxt(finame, max_rows=1) # Npts, Mass [g], Radius [cm], Luminosity [erg/s]
+	data=np.loadtxt(finame, skiprows=1, max_rows=int(header[0]))
 	profile={"ind"       : data[:,0],  # grid point index
 			 "r"         : data[:,1],  # radial coordinate [cm]
 			 "M"         : data[:,2],  # interior mass [g]
@@ -66,8 +67,6 @@ def load_profile(finame):
 			 "eps_n_rho" : data[:,17], # nuclear energy generation rate partial
 			 "Omega_rot" : data[:,18]  # Rotational velocity
 			}
-
-	header=np.loadtxt(finame, max_rows=1) # Npts, Mass [g], Radius [cm], Luminosity [erg/s]
 
 	return profile, header
 
