@@ -90,7 +90,7 @@ def get_nearest_photo(cur_path, cur_time):
 
 	# we want to get the closest photo to cur_time, but also earlier than cur_time
 	# first let's get the stellar age at each photo
-	photo_ages = np.array([sh.star_age[photo_num-1] for photo_num in photo_model_ind])
+	photo_ages = np.array([sh.star_age[photo_num] for photo_num in photo_model_ind])
 	# then let's get the time difference between each photo and cur_time
 	photo_dt = cur_time - photo_ages
 
