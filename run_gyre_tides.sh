@@ -28,6 +28,8 @@ cur_orbit_path="${cur_star_path}_${cur_orbit}"
 fodir="${base_fodir}/${cur_star}"
 orbev_fodir="${base_fodir}/${cur_star}_${cur_orbit}"
 mkdir ${orbev_fodir}
+# Path to output file of gyre_tides
+tide_foname="${orbev_fodir}/tide_orbit.h5"
 
 # set up the directory for orbital evolution
 # Check whether we have the base directory containing the photos
@@ -92,11 +94,18 @@ do
 
 	# get a fresh gyre inlist
 	cp ${base_fidir}/base_setup/gyre_base_setup/gyre_tides.in .
-	tide_foname="${orbev_fodir}/tide_orbit.h5"
+	# update location for output file
 	sed -i "s:summary_file\s=\s.*:summary_file = '${tide_foname}':g" gyre_tides.in
 
-	# update the orbital parameters in the gyre inlist
-	python update_orbital_parameters.py ${cur_orbit_path} $i $cur_star ${job_n} ${orbev_fodir}
+	# initialize the history and inlist
+	if ((i==1)); then
+		echo "Initializing state"
+		python initialize_state.py ${cur_orbit_path} ${cur_star} ${job_n}
+	fi
+	if ((i>1)); then
+		# update the orbital parameters in the gyre inlist
+		python update_orbital_parameters.py ${cur_orbit_path} ${cur_star} ${job_n} ${orbev_fodir}
+	fi
 
 	# generate new stellar profiles if needed via MESA simulation
 	# check whether we are in the bounds of the currently generated profiles
@@ -139,8 +148,12 @@ do
 		# get rid of the stellar profile before we get a fresh one
 		# but only if we're making a fresh one!
 		rm profile_cur.data.GYRE
+
+		# update the orbital parameters in the gyre inlist
+		#python update_orbital_parameters.py ${cur_orbit_path} ${cur_star} ${job_n} ${orbev_fodir}
 	fi
 
+	# Update the orbital parameters by the explicit Euler method
 	# update the stellar model in the working directory
 	python update_stellar_profile.py ${orbev_fodir}
 
