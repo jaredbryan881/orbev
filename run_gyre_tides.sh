@@ -87,6 +87,9 @@ python clean_photo_album.py ${cur_orbit_path}
 # calculate the moments of inertia for the MESA models in the current chunk
 python calculate_Is.py ${orbev_fodir}
 
+# initialize state
+python initialize_state.py ${cur_orbit_path} ${cur_star} ${job_n}
+
 # take some finite number of steps
 for i in {1..10000}
 do
@@ -96,12 +99,10 @@ do
 	cp ${base_fidir}/base_setup/gyre_base_setup/gyre_tides.in .
 	# update location for output file
 	sed -i "s:summary_file\s=\s.*:summary_file = '${tide_foname}':g" gyre_tides.in
+	# update the orbital parameters in the inlist
+	python update_inlist.py $i ${job_n} $m
 
 	# initialize the history and inlist
-	if ((i==1)); then
-		echo "Initializing state"
-		python initialize_state.py ${cur_orbit_path} ${cur_star} ${job_n}
-	fi
 	if ((i>1)); then
 		# update the orbital parameters in the gyre inlist
 		python update_orbital_parameters.py ${cur_orbit_path} ${cur_star} ${job_n} ${orbev_fodir}

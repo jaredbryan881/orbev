@@ -13,13 +13,10 @@ def main():
 	cur_dir=sys.argv[2]
 	cur_param_ind=int(sys.argv[3])
 
+	# Initialize orbital configuration history file
 	# Read stellar history file
 	sh_finame="{}/LOGS/history_full.data".format(cur_path)
 	sh=mr.MesaData(sh_finame)
-	
-	# Initialize orbital configuration in the GYRE inlist
-	update_orbital_parameters(params.OmegaOrb0[cur_param_ind], params.OmegaRot0[cur_param_ind], params.e0[cur_param_ind], params.gyre_inlist)
-	# Initialize orbital configuration history file
 	# little hack to get around not having the orbital history file yet: 
 	# just interpret the initial M from the cur_dir string as a mass in Msun
 	# it's pretty ugly though
