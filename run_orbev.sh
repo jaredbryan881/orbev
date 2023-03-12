@@ -1,33 +1,33 @@
 #!/bin/bash
 
-export MESA_DIR=/home/jared/MIT/astero/mesa
-export MESASDK_ROOT=/home/jared/MIT/astero/mesasdk
-source $MESASDK_ROOT/bin/mesasdk_init.sh
-export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
+# current parameters
+m=1.40
+z=0.02
+job_n=${1-0} # take command line arg or else just label it as 0
 
+#############################
+# Run background MESA model #
+#############################
+# path to the current MESA mode
+cur_star="M${m}_Z${z}"
+cur_star_path="${base_work_dir}/${cur_star}"
 
-Ms=(1.35 1.35)
-Zs=(0.028 0.028)
+if [ ! -d ${cur_star_path} ]; then
+	echo "Running MESA simulation."
+	source ./run_mesa_backbone.sh $m $z
+else
+	echo "MESA model already exists."
+fi
 
-job_n=${1-0}
+###########################
+# Run orbital integration #
+###########################
+# Path to MESA model for the current orbit, a copy of the one at cur_star_path
+cur_orbit="orb${job_n}"
+cur_orbit_path="${cur_star_path}_${cur_orbit}"
+# Path to the MESA profiles and GYRE-tides output directory
+orbev_fodir="${base_fodir}/${cur_star}_${cur_orbit}"
+mkdir ${orbev_fodir}
 
-base_work_dir="."
-
-for m in "${Ms[@]}"
-do
-	for z in "${Zs[@]}"
-	do
-		cur_star=M${m}_Z${z}
-
-		if [ ! -d "${base_work_dir}/work/${cur_star}" ]; then
-			echo "Running MESA simulation."
-			# run the backbone MESA model
-			source ./run_mesa_backbone.sh $m $z
-		else
-			echo "MESA model already exists."
-		fi
-
-		# run the orbital evolution
-		source ./run_gyre_tides.sh $m $z $job_n
-	done
-done
+# run the orbital evolution
+source ./run_gyre_tides.sh $m $z $job_n

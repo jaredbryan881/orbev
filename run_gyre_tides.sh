@@ -1,35 +1,9 @@
 #!/bin/bash
 
-# GYRE directory (with GYRE-tides enabled)
-export GYRE_DIR=/home/jared/MIT/astero/gyre_v2/gyre
-
-# path to directory containing orbev collection
-base_fidir="/home/jared/MIT/astero/gyre_HATP2/orbev"
-
-# path to directory we'll run code from
-base_work_dir="/home/jared/MIT/astero/gyre_HATP2/orbev/work"
-
-# path to place we'll save files to
-base_fodir="/home/jared/MIT/astero/gyre_HATP2/orbev/output"
-
 # current parameters
 m=$1
 z=$2
 job_n=${3-0} # take command line arg or else just label it as 0
-
-# create a place to work
-# Path to MESA model for the current mass/metallicity
-cur_star="M${m}_Z${z}"
-cur_star_path="${base_work_dir}/${cur_star}"
-# Path to MESA model for the current orbit, a copy of the one at cur_star_path
-cur_orbit="orb${job_n}"
-cur_orbit_path="${cur_star_path}_${cur_orbit}"
-# Path to the MESA profiles and GYRE-tides output directory
-fodir="${base_fodir}/${cur_star}"
-orbev_fodir="${base_fodir}/${cur_star}_${cur_orbit}"
-mkdir ${orbev_fodir}
-# Path to output file of gyre_tides
-tide_foname="${orbev_fodir}/tide_orbit.h5"
 
 # set up the directory for orbital evolution
 # Check whether we have the base directory containing the photos
@@ -43,15 +17,13 @@ if [ ! -d "${cur_orbit_path}" ]; then
 fi
 cd ${cur_orbit_path}
 
-# edit the history file to save just the stellar age
-
 # reformat the inlist to save every profile but no photos
 sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
 sed -i "s/photo_interval=.*/photo_interval=100000/g" inlist_MS # photo interval is longer than max_model_number-> no photos
 # save these profiles into the directory for this particular orbit
 sed -i "s:log_directory=.*:log_directory='${orbev_fodir}':g" inlist_MS
 
-# info
+# initial orbital configuration and simulation parameters
 python params.py ${job_n}
 
 # create a list of the original MESA photos so we can keep the photos directory clean
@@ -94,13 +66,6 @@ python initialize_state.py ${cur_orbit_path} ${cur_star} ${job_n}
 for i in {1..10000}
 do
 	echo $i
-
-	# get a fresh gyre inlist
-	cp ${base_fidir}/base_setup/gyre_base_setup/gyre_tides.in .
-	# update location for output file
-	sed -i "s:summary_file\s=\s.*:summary_file = '${tide_foname}':g" gyre_tides.in
-	# update the orbital parameters in the inlist
-	python update_inlist.py $i ${job_n} $m
 
 	# generate new stellar profiles if needed via MESA simulation
 	# check whether we are in the bounds of the currently generated profiles
@@ -145,7 +110,16 @@ do
 		rm profile_cur.data.GYRE
 	fi
 
-	# Update the orbital parameters by the explicit Euler method
+	# get a fresh gyre inlist
+	cp ${base_fidir}/base_setup/gyre_base_setup/gyre_tides.in .
+	# Path to output file of gyre_tides
+	tide_foname="${orbev_fodir}/tide_orbit.h5"
+	# update location for output file
+	sed -i "s:summary_file\s=\s.*:summary_file = '${tide_foname}':g" gyre_tides.in
+	# update the orbital parameters in the inlist
+	python update_inlist.py $i ${job_n} $m
+
+	# Take a timestep using the Runge-Kutta-Fehlberg method, aka RK4(5)
 	# update the stellar model in the working directory
 	python update_stellar_profile.py ${orbev_fodir}
 

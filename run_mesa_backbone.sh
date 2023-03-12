@@ -1,20 +1,16 @@
 #!/bin/bash
 
-# path to directory containing orbev collection
-base_fidir="/home/jared/MIT/astero/gyre_HATP2/orbev"
-
 # current parameters
 m=$1
 z=$2
 
 # create a place to work by copying the default setup
-cur_dir="M${m}_Z${z}"
-cp -r ${base_fidir}/base_setup/mesa_base_setup ${base_fidir}/work/${cur_dir}
-cd ${base_fidir}/work/${cur_dir}
+cp -r ${base_fidir}/base_setup/mesa_base_setup ${cur_star_path}
+cd ${cur_star_path}
 
 # --- BEGIN PRE-MAIN SEQUENCE
 echo "Running pre-main sequence evolution for a star of M=${m}Msun and Z=$z"
-# get the correct initial mass and metallicity
+# set the initial mass and metallicity
 sed -i "s/initial_mass=.*/initial_mass=$m/g" inlist_PMS
 sed -i "s/initial_z=.*/initial_z=$z/g" inlist_PMS
 sed -i "s/Zbase=.*/Zbase=$z/g" inlist_PMS
@@ -24,13 +20,13 @@ sed -i "s/Zbase=.*/Zbase=$z/g" inlist_PMS
 ./rn
 
 # clean up the logs/photos directory, leaving only the .mod file
-rm ${base_fidir}/work/${cur_dir}/LOGS/*
-rm ${base_fidir}/work/${cur_dir}/photos/*
+rm ${cur_star_path}/LOGS/*
+rm ${cur_star_path}/photos/*
 # --- END PRE-MAIN SEQUENCE
 
 # --- BEGIN MAIN SEQUENCE
 echo "Running main sequence evolution for a star of M=${m}Msun and Z=$z"
-# get the correct initial mass and metallicity
+# set the initial mass and metallicity
 sed -i "s/initial_mass=.*/initial_mass=$m/g" inlist_MS
 sed -i "s/initial_z=.*/initial_z=$z/g" inlist_MS
 sed -i "s/Zbase=.*/Zbase=$z/g" inlist_MS
@@ -44,10 +40,10 @@ sed -i 's/inlist_PMS/inlist_MS/g' inlist
 ./rn
 
 # just get rid of the profiles to start fresh
-rm ${base_fidir}/work/${cur_dir}/LOGS/profile*
+rm ${cur_star_path}/LOGS/profile*
 
 # rename the history file to protect it from being overwritten
-mv ${base_fidir}/work/${cur_dir}/LOGS/history.data ${base_fidir}/work/${cur_dir}/LOGS/history_full.data
+mv ${cur_star_path}/LOGS/history.data ${cur_star_path}/LOGS/history_full.data
 # --- END MAIN SEQUENCE
 
 # return to base directory
