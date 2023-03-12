@@ -87,7 +87,7 @@ python clean_photo_album.py ${cur_orbit_path}
 # calculate the moments of inertia for the MESA models in the current chunk
 python calculate_Is.py ${orbev_fodir}
 
-# initialize state
+# initialize orbital history file with initial orbital parameters
 python initialize_state.py ${cur_orbit_path} ${cur_star} ${job_n}
 
 # take some finite number of steps
@@ -101,12 +101,6 @@ do
 	sed -i "s:summary_file\s=\s.*:summary_file = '${tide_foname}':g" gyre_tides.in
 	# update the orbital parameters in the inlist
 	python update_inlist.py $i ${job_n} $m
-
-	# initialize the history and inlist
-	if ((i>1)); then
-		# update the orbital parameters in the gyre inlist
-		python update_orbital_parameters.py ${cur_orbit_path} ${cur_star} ${job_n} ${orbev_fodir}
-	fi
 
 	# generate new stellar profiles if needed via MESA simulation
 	# check whether we are in the bounds of the currently generated profiles
@@ -149,9 +143,6 @@ do
 		# get rid of the stellar profile before we get a fresh one
 		# but only if we're making a fresh one!
 		rm profile_cur.data.GYRE
-
-		# update the orbital parameters in the gyre inlist
-		#python update_orbital_parameters.py ${cur_orbit_path} ${cur_star} ${job_n} ${orbev_fodir}
 	fi
 
 	# Update the orbital parameters by the explicit Euler method
@@ -163,6 +154,9 @@ do
 
 	# calculate secular rates of change and concatenate into a response history
 	python calculate_orbev.py ${orbev_fodir} $i
+
+	# update the orbital state in the orbital history file
+	python update_orbital_parameters.py ${cur_orbit_path} ${cur_star} ${job_n} ${orbev_fodir}
 
 	# break if no response was created
 	repackage_status=$?
@@ -184,7 +178,7 @@ rm ${orbev_fodir}/profile*
 rm ${orbev_fodir}/history.data
 rm ${orbev_fodir}/stellar_MOIs.txt
 
-# get the history of orbital paramters
+# get the history of orbital parameters
 cp ${cur_orbit_path}/orbital_history.data ${orbev_fodir}/
 
 # return to home dir

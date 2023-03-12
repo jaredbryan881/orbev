@@ -11,7 +11,7 @@ import pandas as pd
 import mesa_reader as mr
 
 import params
-from model_io import load_profile, load_stellar_state, load_orbital_state, update_orbital_parameters, update_history
+from model_io import load_profile, load_stellar_state, load_orbital_state, update_history
 from unit_conversion import freq_scale, a_to_OmegaOrb, OmegaOrb_to_a
 from calculate_Is import MOI
 
@@ -102,8 +102,6 @@ def main():
 
 	# update orbital_history.data
 	update_history(new_time, new_a, new_e, new_OmegaRot)
-	# update parameters in gyre_orbit.in
-	update_orbital_parameters(new_OmegaOrb, new_OmegaRot, new_e, params.gyre_inlist)
 
 if __name__=="__main__":
 	main()
