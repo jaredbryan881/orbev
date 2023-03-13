@@ -133,7 +133,7 @@ def main():
 		else:
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/4)
 
-		new_dt = np.min([max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
+		new_dt = np.min([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
 		print("New timestep is {}".format(new_dt))
 
 		update_history(new_time, new_a, new_e, new_OmegaRot, new_dt, foname="orbital_history.data")
