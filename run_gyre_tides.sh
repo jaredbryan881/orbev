@@ -110,27 +110,8 @@ do
 		rm profile_cur.data.GYRE
 	fi
 
-	# get a fresh gyre inlist
-	cp ${base_fidir}/base_setup/gyre_base_setup/gyre_tides.in .
-	# Path to output file of gyre_tides
-	tide_foname="${orbev_fodir}/tide_orbit.h5"
-	# update location for output file
-	sed -i "s:summary_file\s=\s.*:summary_file = '${tide_foname}':g" gyre_tides.in
-	# update the orbital parameters in the inlist
-	python update_inlist.py $i ${job_n} $m
-
-	# Take a timestep using the Runge-Kutta-Fehlberg method, aka RK4(5)
-	# update the stellar model in the working directory
-	python update_stellar_profile.py ${orbev_fodir}
-
-	# Calculate the orbtial evolution rates
-	$GYRE_DIR/bin/gyre_tides gyre_tides.in
-
-	# calculate secular rates of change and concatenate into a response history
-	python calculate_orbev.py ${orbev_fodir} $i
-
-	# update the orbital state in the orbital history file
-	python update_orbital_parameters.py ${cur_orbit_path} ${cur_star} ${job_n} ${orbev_fodir}
+	# take a timestep
+	source ./RK45_step.sh
 
 	# break if no response was created
 	repackage_status=$?
@@ -140,11 +121,6 @@ do
 		echo "tide_orbit.h5 not created, exiting."
 		break
 	fi
-
-	# clean up the current directory
-	# get rid of the gyre inlist and tides_output.h5
-	rm gyre_tides.in
-	rm ${orbev_fodir}/tide_orbit.h5
 done
 
 # clean up output directory

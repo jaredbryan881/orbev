@@ -12,7 +12,7 @@ def main():
 
 	# load cur_time
 	oh_finame="orbital_history.data"
-	cur_time,_,_,_=load_orbital_state(oh_finame)
+	cur_time,_,_,_,_=load_orbital_state(oh_finame)
 
 	# load times of MESA profiles
 	if params.use_stored_profiles:

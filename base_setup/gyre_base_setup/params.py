@@ -13,8 +13,8 @@ use_stored_profiles=False # assume we have all the profiles we need? or else gen
 data=np.loadtxt("params.txt")
 e0=data[0]
 OmegaOrb0=data[1]
-OmegaRot0=data[2]
-t0=data[3]
+OmegaRot0=data[2]*3.2
+t0=None#data[3]*1e9
 qs=data[4]
 Zs=data[5]
 #t0=np.array([1e8]) # [yr]
@@ -23,13 +23,15 @@ Zs=data[5]
 #OmegaRot0=np.array([0.1774])*4.8 # [cyc/day]
 #qs=np.array([0.01])
 
-#################
-# Update limits #
-#################
-max_dt=1e3         # [yr]
-max_de=1e-5        # []
-max_da=1e-5        # [au]
-max_dOmegaRot=1e-5 # [cyc/day]
+####################################
+# Parameters for adaptive timestep #
+####################################
+max_dt = 1e6 # [yr]
+base_dt = 1e4 # [yr]
+e_eps = 1e-5 # max allowable fractional error in e
+a_eps = 1e-5 # mac allowable fractional error in a
+OmegaRot_eps = 1e-5 # max allowable fractional error in OmegaRot
+safety_factor = 0.95 # Constant slightly <1 used to set adaptive timestep
 
 #######################
 # Paths and Filenames #
@@ -37,7 +39,7 @@ max_dOmegaRot=1e-5 # [cyc/day]
 gyre_inlist="./gyre_tides.in"
 
 # subset of profiles which can be selected from
-allowable_profiles=np.arange(1,1005,1)
+allowable_profiles=np.arange(1,1006,1)
 n_profiles=50
 
 def main():

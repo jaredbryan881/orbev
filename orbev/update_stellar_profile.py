@@ -7,8 +7,11 @@ import mesa_reader as mr
 
 import params
 
+from RK45 import RK45_tableau
+
 def main():
 	base_profile_dir=sys.argv[1]
+	rk_ind=int(sys.argv[2])
 
 	# Read stellar history file
 	# don't confuse this with history_full.data, whose indices would not relate to pnums
@@ -17,7 +20,11 @@ def main():
 
 	# Read orbital configuration
 	oh_finame="orbital_history.data"
-	cur_time,cur_a,cur_e,cur_OmegaRot=load_orbital_state(oh_finame)
+	cur_time,_,_,_,cur_dt=load_orbital_state(oh_finame)
+
+	# update the current time based on where we are in the RKF step
+	tab=RK45_tableau()
+	cur_time = cur_time + tab.c[rk_ind]*cur_dt
 
 	# First, check whether we are close enough to a grid point to just load an exact stellar model
 	# distance between two nearest profiles

@@ -27,7 +27,7 @@ def main():
 		t0=np.ceil(sh.star_age[0])
 	else:
 		t0=params.t0[cur_param_ind]
-	update_history(t0, a0, params.e0[cur_param_ind], params.OmegaRot0[cur_param_ind])
+	update_history(t0, a0, params.e0[cur_param_ind], params.OmegaRot0[cur_param_ind], params.base_dt)
 
 if __name__=="__main__":
 	main()

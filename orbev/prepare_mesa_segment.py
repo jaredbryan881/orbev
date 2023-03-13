@@ -34,7 +34,7 @@ def main():
 	else:
 		# load current time
 		oh_finame="orbital_history.data"
-		cur_time,_,_,_=load_orbital_state(oh_finame)
+		cur_time,_,_,_,_=load_orbital_state(oh_finame)
 
 	# locate the nearest photo
 	photo_string, max_model_number = get_nearest_photo(cur_path, cur_time)

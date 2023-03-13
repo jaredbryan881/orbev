@@ -15,6 +15,8 @@ from model_io import load_profile, load_stellar_state, load_orbital_state, updat
 from unit_conversion import freq_scale, a_to_OmegaOrb, OmegaOrb_to_a
 from calculate_Is import MOI
 
+from RK45 import RK45_tableau
+
 # constants
 G = 6.67430e-11  # [m3 kg-1 s-2]
 Rsun = 695700000 # [m]
@@ -27,6 +29,7 @@ def main():
 	cur_dir=sys.argv[2]
 	cur_param_ind=int(sys.argv[3])
 	orbev_fodir=sys.argv[4]
+	rk_ind=int(sys.argv[5])
 
 	# get stellar state from the current profile.data.GYRE
 	cur_R,cur_M=load_stellar_state("profile_cur.data.GYRE") # [cm], [g]
@@ -34,29 +37,22 @@ def main():
 	cur_M=cur_M/1000/Msun # [Msun]
 
 	# Read orbital configuration
-	oh_finame="orbital_history.data"
-	cur_time,cur_a,cur_e,cur_OmegaRot=load_orbital_state(oh_finame)
+	cur_time,cur_a,cur_e,cur_OmegaRot,cur_dt=load_orbital_state("RKF_buffer.data")
 	cur_OmegaOrb=a_to_OmegaOrb(cur_a, cur_M)
 
 	# Define dimensionalizing constant
 	fs = freq_scale(cur_M*Msun, cur_R*Rsun)
 
 	# read tides output
+	# [edot,adot,OmegaRotdot] make up the k vector for RK4(5)
 	print("Loading tide_orbit")
-	with h5py.File("{}/tidal_response_history.h5".format(orbev_fodir), "r") as hf:
-		# orbital parameters
-		Omega_orb=hf["Omega_orb"][-1,0]*fs # [cyc/day]
-
-		a=OmegaOrb_to_a(Omega_orb, cur_M) # [au]
-
-		e=hf["e"][-1,0]
-
+	with h5py.File("{}/tidal_response_RKF_step.h5".format(orbev_fodir), "r") as hf:
 		# orbital evolution rates
-		edot=hf["e_dot"][-1,0]*fs*365 # 1/yr
+		edot=hf["e_dot"][:,0]*fs*365 # 1/yr
 
-		adot=hf["a_dot"][-1,0]*fs*365*cur_R*(Rsun/au) # au/yr
+		adot=hf["a_dot"][:,0]*fs*365*cur_R*(Rsun/au) # au/yr
 
-		Jdot=hf["J_dot"][-1,0]*fs*365 # 1/yr
+		Jdot=hf["J_dot"][:,0]*fs*365 # 1/yr
 		Jdot*=(cur_R**(1/2) * ((G*(Rsun**3)/Msun)**(1/2))*86400 * cur_M**(3/2)) # Msun*Rsun**2*cyc/day/yr
 		profile, header = load_profile("./profile_cur.data.GYRE")
 
@@ -66,21 +62,30 @@ def main():
 			I = MOI(profile["M"], profile["r"]) # Msun*Rsun^2
 		OmegaRotdot = Jdot/I # cyc/day/yr
 
+	# get an RK4(5) tableau to get the intermediate function evalution step size
+	tab=RK45_tableau()
+
+
+	# zero-pad the orbital evolution rates to make dot product possible
+	edot=np.hstack([edot, np.zeros(5-rk_ind)])
+	adot=np.hstack([adot, np.zeros(5-rk_ind)])
+	OmegaRotdot=np.hstack([OmegaRotdot, np.zeros(5-rk_ind)])
+
 	# calculate the timestep and update orbital parameters
 	if params.live_orbit:
 		# calculate the timestep
-		dt = np.min([np.abs(params.max_de/edot), np.abs(params.max_da/adot), np.abs(params.max_dOmegaRot/OmegaRotdot), params.max_dt])
 		# step backward in time if time-reversed simulation
 		if params.time_reversed:
-			dt=-dt
-		new_time=cur_time+dt
+			cur_dt=-cur_dt
+		new_time=cur_time+tab.c[rk_ind]*cur_dt
 
 		# update orbital parameters
-		new_e = e + dt*edot
-		new_a = a + dt*adot
+		new_e = cur_e + np.dot(tab.a[rk_ind,:],edot[:-1])*cur_dt
+		new_a = cur_a + np.dot(tab.a[rk_ind,:],adot[:-1])*cur_dt
 		new_OmegaOrb = a_to_OmegaOrb(new_a, cur_M)
-		new_OmegaRot = cur_OmegaRot + dt*OmegaRotdot
+		new_OmegaRot = cur_OmegaRot + np.dot(tab.a[rk_ind,:],OmegaRotdot[:-1])*cur_dt
 	else:
+		# TODO: update how we do fixed timesteps
 		# take fixed timestep
 		dt = params.max_dt
 		# step backward in time if time-reversed simulation
@@ -94,14 +99,44 @@ def main():
 		new_OmegaOrb = params.OmegaOrb0[cur_param_ind]
 		new_OmegaRot = params.OmegaRot0[cur_param_ind]
 
-	print("Time: {} Myr".format(cur_time/1e6))
-	print("dt = {} Myr".format(dt/1e6))
-	print("edot = {} 1/yr; de={}".format(edot, dt*edot))
-	print("adot = {} au/yr; da={}".format(adot, dt*adot))
-	print("OmegaRotdot = {} cyc/day/yr; dOmegaRot={}".format(OmegaRotdot, dt*OmegaRotdot))
+	# update the RKF buffer
+	update_history(new_time, new_a, new_e, new_OmegaRot, cur_dt, foname="RKF_buffer.data")
 
-	# update orbital_history.data
-	update_history(new_time, new_a, new_e, new_OmegaRot)
+	# finally use the intermediate orbital evolution rates to make an update to orbital_history.data
+	if rk_ind==5:
+		new_time = cur_time + cur_dt
+
+		new_e = cur_e + cur_dt*np.dot(tab.b[0,:], edot)
+		new_e_star = cur_e + cur_dt*np.dot(tab.b[1,:], edot)
+		e_Delta1 = np.abs(new_e-new_e_star)
+		e_Delta0 = params.e_eps*cur_e
+		if e_Delta0>=e_Delta1:
+			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/5)
+		else:
+			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/4)
+
+		new_a = cur_a + cur_dt*np.dot(tab.b[0,:], adot)
+		new_a_star = cur_a + cur_dt*np.dot(tab.b[1,:], adot)
+		a_Delta1 = np.abs(new_a-new_a_star)
+		a_Delta0 = params.a_eps*cur_a
+		if a_Delta0>=e_Delta1:
+			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/5)
+		else:
+			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/4)
+
+		new_OmegaRot = cur_OmegaRot + cur_dt*np.dot(tab.b[0,:], OmegaRotdot)
+		new_OmegaRot_star = cur_OmegaRot + cur_dt*np.dot(tab.b[1,:], OmegaRotdot)
+		OmegaRot_Delta1 = np.abs(new_OmegaRot-new_OmegaRot_star)
+		OmegaRot_Delta0 = params.OmegaRot_eps*cur_OmegaRot
+		if OmegaRot_Delta0>=OmegaRot_Delta1:
+			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/5)
+		else:
+			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/4)
+
+		new_dt = np.min([max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
+		print("New timestep is {}".format(new_dt))
+
+		update_history(new_time, new_a, new_e, new_OmegaRot, new_dt, foname="orbital_history.data")
 
 if __name__=="__main__":
 	main()
