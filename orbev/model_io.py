@@ -43,7 +43,8 @@ def load_profile(finame):
 	-------
 	:return profile: dict
 		Dictionary of np.array data vectors
-	:return header:
+	:return header: np.array
+		Metadata for MESA profile
 	"""
 	header=np.loadtxt(finame, max_rows=1) # Npts, Mass [g], Radius [cm], Luminosity [erg/s]
 	data=np.loadtxt(finame, skiprows=1, max_rows=int(header[0]))
@@ -102,42 +103,46 @@ def load_orbital_state(oh_finame):
 	Returns
 	-------
 	:return time: float
-		Current stellar age
+		Current stellar age [yr]
 	:return a: float
 		Current orbital semi-major axis [au]
 	:return e: float
 		Current orbital eccentricity []
 	:return OmegaRot: float
 		Current spin frequency [cyc/day]
+	:return dt: float
+		Current suggested timestep [yr]
 	"""
 	data=pd.read_csv(oh_finame)
 
-	return data["time"].values[-1], data["a"].values[-1], data["e"].values[-1], data["OmegaRot"].values[-1]
+	return data["time"].values[-1], data["a"].values[-1], data["e"].values[-1], data["OmegaRot"].values[-1], data["dt"].values[-1]
 
-def update_history(time, a, e, OmegaRot):
+def update_history(time, a, e, OmegaRot, dt, foname="orbital_history.data"):
 	"""Update orbital history file with current orbital configuration
 
 	Arguments
 	---------
 	:param time: float
-		Current stellar age
+		Current stellar age [yr]
 	:param a: float
 		Current orbital semi-major axis [au]
 	:param e: float
 		Current orbital eccentricity []
 	:param OmegaRot: float
 		Current spin frequency [cyc/day]
+	:param dt: float
+		Current suggested timestep [yr]
 	"""
 	# check if it exists yet
-	if not os.path.exists("orbital_history.data"):
+	if not os.path.exists(foname):
 		# initialize file with headers
-		header="time,a,e,OmegaRot"
+		header="time,a,e,OmegaRot,dt"
 	else:
 		header=''
 
 	# append configuration
-	with open("orbital_history.data", "a+") as f:
-		np.savetxt(f, np.array([[time,a,e,OmegaRot]]), delimiter=',', header=header, comments='')
+	with open(foname, "a+") as f:
+		np.savetxt(f, np.array([[time,a,e,OmegaRot,dt]]), delimiter=',', header=header, comments='')
 
 def update_orbital_parameters(OmegaOrb, OmegaRot, e, finame="gyre_tides.in"):
 	"""Update orbital parameters in the GYRE-tides input file.
