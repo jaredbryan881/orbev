@@ -104,6 +104,7 @@ def main():
 
 	# finally use the intermediate orbital evolution rates to make an update to orbital_history.data
 	if rk_ind==5:
+		retry_flag=False
 		new_time = cur_time + cur_dt
 
 		new_e = cur_e + cur_dt*np.dot(tab.b[0,:], edot)
@@ -114,6 +115,7 @@ def main():
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/5)
 		else:
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/4)
+			retry_flag=True
 
 		new_a = cur_a + cur_dt*np.dot(tab.b[0,:], adot)
 		new_a_star = cur_a + cur_dt*np.dot(tab.b[1,:], adot)
@@ -123,6 +125,7 @@ def main():
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/5)
 		else:
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/4)
+			retry_flag=True
 
 		new_OmegaRot = cur_OmegaRot + cur_dt*np.dot(tab.b[0,:], OmegaRotdot)
 		new_OmegaRot_star = cur_OmegaRot + cur_dt*np.dot(tab.b[1,:], OmegaRotdot)
@@ -132,11 +135,15 @@ def main():
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/5)
 		else:
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/4)
+			retry_flag=True
 
 		new_dt = np.min([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
 		print("New timestep is {}".format(new_dt))
 
-		update_history(new_time, new_a, new_e, new_OmegaRot, new_dt, foname="orbital_history.data")
+		if retry_flag:
+			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, new_dt, foname="orbital_history.data")
+		else:
+			update_history(new_time, new_a, new_e, new_OmegaRot, new_dt, foname="orbital_history.data")
 
 if __name__=="__main__":
 	main()
