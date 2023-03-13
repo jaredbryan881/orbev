@@ -65,7 +65,6 @@ def main():
 	# get an RK4(5) tableau to get the intermediate function evalution step size
 	tab=RK45_tableau()
 
-
 	# zero-pad the orbital evolution rates to make dot product possible
 	edot=np.hstack([edot, np.zeros(5-rk_ind)])
 	adot=np.hstack([adot, np.zeros(5-rk_ind)])
@@ -141,6 +140,7 @@ def main():
 		print("New timestep is {}".format(new_dt))
 
 		if retry_flag:
+			print("Error too high, lowering timestep and trying again.")
 			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, new_dt, foname="orbital_history.data")
 		else:
 			update_history(new_time, new_a, new_e, new_OmegaRot, new_dt, foname="orbital_history.data")

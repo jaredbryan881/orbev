@@ -17,18 +17,17 @@ def main():
 	if rk_ind==0:
 		# load the orbital state from the orbital history file
 		cur_time,cur_a,cur_e,cur_OmegaRot,cur_dt=load_orbital_state("orbital_history.data")
-		# convert semi-major axis to orbital frequency
-		cur_OmegaOrb=a_to_OmegaOrb(cur_a, cur_M) # [cyc/day]
 
 		# TODO: move this update_history call somewhere else. Would be better if this script only updated the inlist
 		# initialize another orbital history file just for the RKF substeps
-		update_history(cur_time, cur_OmegaOrb, cur_OmegaRot, cur_e, cur_dt, foname="RKF_buffer.data")
+		update_history(cur_time, cur_a, cur_e, cur_OmegaRot, cur_dt, foname="RKF_buffer.data")
 	else:
 		# calculate updated orbital parameters based on RKF step
 		cur_time,cur_a,cur_e,cur_OmegaRot,cur_dt=load_orbital_state("RKF_buffer.data")
-		# convert semi-major axis to orbital frequency
-		cur_OmegaOrb=a_to_OmegaOrb(cur_a, cur_M) # [cyc/day]
-
+	
+	# convert semi-major axis to orbital frequency
+	cur_OmegaOrb=a_to_OmegaOrb(cur_a, cur_M) # [cyc/day]
+	
 	# Update orbital parameters in the gyre_tides inlist
 	update_orbital_parameters(cur_OmegaOrb, cur_OmegaRot, cur_e, params.gyre_inlist)
 		
