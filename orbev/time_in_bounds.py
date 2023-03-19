@@ -12,7 +12,7 @@ def main():
 
 	# load cur_time
 	oh_finame="orbital_history.data"
-	cur_time,_,_,_,_=load_orbital_state(oh_finame)
+	cur_time,_,_,_,cur_dt=load_orbital_state(oh_finame)
 
 	# load times of MESA profiles
 	if params.use_stored_profiles:
@@ -25,7 +25,7 @@ def main():
 	h=mr.MesaData(sh_finame)
 
 	# compare times
-	if (np.min(h.star_age)<=cur_time) and (np.max(h.star_age)>=cur_time):
+	if (np.min(h.star_age)<=cur_time) and (np.max(h.star_age)>=(cur_time+cur_dt)):
 		# in bounds
 		sys.exit(0)
 	else:
