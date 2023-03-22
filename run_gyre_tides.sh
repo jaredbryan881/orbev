@@ -16,7 +16,8 @@ if [ ! -d "${cur_orbit_path}" ]; then
 	cp ${base_fidir}/base_setup/gyre_base_setup/params.* ${cur_orbit_path}
 fi
 cd ${cur_orbit_path}
-rm photos/*
+rm ${cur_orbit_path}/photos/*
+rm ${cur_orbit_path}/LOGS/history_full.data
 
 # reformat the inlist to save every profile but no photos
 sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
