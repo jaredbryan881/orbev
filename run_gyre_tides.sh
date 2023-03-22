@@ -16,6 +16,7 @@ if [ ! -d "${cur_orbit_path}" ]; then
 	cp ${base_fidir}/base_setup/gyre_base_setup/params.* ${cur_orbit_path}
 fi
 cd ${cur_orbit_path}
+rm photos/*
 
 # reformat the inlist to save every profile but no photos
 sed -i "s/profile_interval=.*/profile_interval=1/g" inlist_MS # save every profile
@@ -27,12 +28,12 @@ sed -i "s:log_directory=.*:log_directory='${orbev_fodir}':g" inlist_MS
 python params.py ${job_n}
 
 # create a list of the original MESA photos so we can keep the photos directory clean
-python create_photo_album.py ${cur_orbit_path}
+python create_photo_album.py ${cur_star_path} ${cur_orbit_path}
 
 # if we aren't storing every profile, we need to generate the current chunk
 # copy the correct photo or return an exit 1
 # and edit the inlist_MS with the new max_model_num
-python prepare_mesa_segment.py ${cur_orbit_path} 0 ${job_n}
+python prepare_mesa_segment.py ${cur_star_path} ${cur_orbit_path} 0 ${job_n}
 mesa_prep_exit_status=$?
 if [ "${mesa_prep_exit_status}" -eq 0 ]; then
 	echo "Restarting from current photo"
@@ -54,7 +55,7 @@ fi
 # don't confuse this for deleting profile*.data.GYRE, which we very much want to keep
 rm ${orbev_fodir}/profile*.data
 # clean up photos directory
-python clean_photo_album.py ${cur_orbit_path}
+python clean_photo_album.py ${cur_star_path} ${cur_orbit_path}
 
 # calculate the moments of inertia for the MESA models in the current chunk
 python calculate_Is.py ${orbev_fodir}
@@ -76,7 +77,7 @@ do
 		rm ${orbev_fodir}/profile*
 		rm ${orbev_fodir}/history.data
 
-		python prepare_mesa_segment.py ${cur_orbit_path} $i ${job_n}
+		python prepare_mesa_segment.py ${cur_star_path} ${cur_orbit_path} $i ${job_n}
 		mesa_prep_exit_status=$?
 		if [ "${mesa_prep_exit_status}" -eq 0 ]; then
 			# photo found successfully and inlist_MS modified
@@ -95,7 +96,7 @@ do
 		# clean up the LOGS directory
 		rm ${orbev_fodir}/profile*.data
 		# clean up photos directory
-		python clean_photo_album.py ${cur_orbit_path}
+		python clean_photo_album.py ${cur_star_path} ${cur_orbit_path}
 
 		# calculate the moments of inertia for the MESA models in the current chunk
 		python calculate_Is.py ${orbev_fodir}

@@ -37,7 +37,7 @@ def main():
 	cur_M=cur_M/1000/Msun # [Msun]
 
 	# Read orbital configuration
-	cur_time,cur_a,cur_e,cur_OmegaRot,cur_dt=load_orbital_state("RKF_buffer.data")
+	cur_time,cur_a,cur_e,cur_OmegaRot,cur_dt=load_orbital_state("orbital_history.data")
 	cur_OmegaOrb=a_to_OmegaOrb(cur_a, cur_M)
 
 	# Define dimensionalizing constant
@@ -78,6 +78,7 @@ def main():
 			cur_dt=-cur_dt
 		new_time=cur_time+tab.c[rk_ind]*cur_dt
 
+		# TODO: fix time-reversed simulations
 		# update orbital parameters
 		new_e = cur_e + np.dot(tab.a[rk_ind,:],edot[:-1])*cur_dt
 		new_a = cur_a + np.dot(tab.a[rk_ind,:],adot[:-1])*cur_dt
@@ -137,13 +138,34 @@ def main():
 			retry_flag=True
 
 		new_dt = np.min([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
-		print("New timestep is {}".format(new_dt))
 
 		if retry_flag:
-			print("Error too high, lowering timestep and trying again.")
-			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, new_dt, foname="orbital_history.data")
+			print("Error too high, lowering timestep from {} to {}.".format(cur_dt, new_dt))
+			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, int(new_dt), foname="orbital_history.data")
 		else:
-			update_history(new_time, new_a, new_e, new_OmegaRot, new_dt, foname="orbital_history.data")
+			print("Step successful, increasing timestep from {} to {}".format(cur_dt, new_dt))
+			update_history(new_time, new_a, new_e, new_OmegaRot, int(new_dt), foname="orbital_history.data")
+
+
+		print("##################################")
+		print("e: {:.15f} -> {:.15f}".format(cur_e, new_e))
+		print("de/dt: {}".format(np.dot(tab.b[0,:], edot)))
+		print("Delta e: {}".format(e_Delta0/e_Delta1))
+		print("dt_e: {:.15f}".format(new_dt_e))
+		print("##################################")
+		print("a: {:.15f} -> {:.15f}".format(cur_a, new_a))
+		print("da/dt: {}".format(np.dot(tab.b[0,:], adot)))
+		print("Delta a: {}".format(a_Delta0/a_Delta1))
+		print("dt_a: {:.15f}".format(new_dt_a))
+		print("##################################")
+		print("OmegaRot: {:.15f} -> {:.15f}".format(cur_OmegaRot, new_OmegaRot))
+		print("dOmegaRot/dt: {}".format(np.dot(tab.b[0,:], OmegaRotdot)))
+		print("Delta OmegaRot: {}".format(OmegaRot_Delta0/OmegaRot_Delta1))
+		print("dt_OmegaRot: {:.15f}".format(new_dt_OmegaRot))
+		print("##################################")
+		print("dt: {} -> {}".format(int(cur_dt), int(new_dt)))
+		print("##################################")
+
 
 if __name__=="__main__":
 	main()

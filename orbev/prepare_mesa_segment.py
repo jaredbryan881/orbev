@@ -16,16 +16,17 @@ def main():
 		# or identify photos. We have all the profiles we need.
 		sys.exit(2)
 
-	cur_path=sys.argv[1]
-	pind=int(sys.argv[2])
-	cur_param_ind=int(sys.argv[3])
+	cur_star_path=sys.argv[1]
+	cur_orbit_path=sys.argv[1]
+	pind=int(sys.argv[3])
+	cur_param_ind=int(sys.argv[4])
 
 	# get the current time
 	if pind==0:
 		# load initial time
 		if params.t0 is None:
 			# load stellar history and use the age at ZAMS
-			sh_finame="{}/LOGS/history_full.data".format(cur_path)
+			sh_finame="{}/LOGS/history_full.data".format(cur_orbit_path)
 			sh=mr.MesaData(sh_finame)
 			t0=np.ceil(np.min(sh.star_age))
 		else:
@@ -37,10 +38,10 @@ def main():
 		cur_time,_,_,_,_=load_orbital_state(oh_finame)
 
 	# locate the nearest photo
-	photo_string, max_model_number = get_nearest_photo(cur_path, cur_time)
+	photo_string, max_model_number = get_nearest_photo(cur_star_path, cur_time)
 
 	# update the MESA inlist's max_model_num
-	with open("{}/inlist_MS".format(cur_path), "r+") as file:
+	with open("{}/inlist_MS".format(cur_orbit_path), "r+") as file:
 		text = file.read()
 		text = re.sub(r"max_model_number=.*", "max_model_number={}".format(max_model_number), text)
 
@@ -57,7 +58,7 @@ def main():
 	else:
 		print("Renaming photo {} to photo_cur".format(photo_string))
 		# otherwise let's find and copy the current photo into something generically runnable by the bash script
-		shutil.copy("{}/photos/{}".format(cur_path,photo_string), "{}/photos/photo_cur".format(cur_path))
+		shutil.copy("{}/photos/{}".format(cur_star_path,photo_string), "{}/photos/photo_cur".format(cur_orbit_path))
 		sys.exit(0)
 
 def get_nearest_photo(cur_path, cur_time):
