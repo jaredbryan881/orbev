@@ -16,7 +16,7 @@ def main():
 	# Initialize orbital configuration history file
 	# Read stellar history file
 	sh_finame="{}/LOGS/star_ages.txt".format(cur_path)
-	star_age=np.loadtxt(sh_finame)
+	_,star_age=np.loadtxt(sh_finame)
 	# little hack to get around not having the orbital history file yet: 
 	# just interpret the initial M from the cur_dir string as a mass in Msun
 	# it's pretty ugly though

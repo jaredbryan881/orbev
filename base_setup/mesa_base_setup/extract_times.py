@@ -4,10 +4,11 @@ import sys
 
 def main():
 	cur_path=sys.argv[1]
-	sh_finame="{}/LOGS/history_full.data"
+	sh_finame="{}/LOGS/history_full.data".format(cur_path)
 	sh=mr.MesaData(sh_finame)
 
-	np.savetxt("star_ages.txt", sh.star_age)
+	# save model numbers and associated stellar ages
+	np.savetxt("{}/LOGS/star_ages.txt".format(cur_path), [sh.model_number, sh.star_age])
 
 if __name__=="__main__":
 	main()

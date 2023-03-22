@@ -18,13 +18,13 @@ def main():
 	if params.use_stored_profiles:
 		# assume only local profiles exist
 		sh_finame="{}/star_ages.txt".format(foname)
-		star_age=np.loadtxt(sh_finame)
+		_,star_age=np.loadtxt(sh_finame)
 	else:
 		# assume we have all profiles
 		# we should always be in-bounds until the simulation finishes (assuming t0 set properly)
 		sh_finame="{}/history.data".format(foname)
-		h=mr.MesaData(sh_finame)
-		star_age=h.star_age
+		sh=mr.MesaData(sh_finame)
+		star_age=sh.star_age
 
 	# compare times
 	if (np.min(star_age)<=cur_time) and (np.max(star_age)>=(cur_time+cur_dt)):

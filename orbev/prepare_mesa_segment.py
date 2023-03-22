@@ -26,9 +26,9 @@ def main():
 		# load initial time
 		if params.t0 is None:
 			# load stellar history and use the age at ZAMS
-			sh_finame="{}/LOGS/history_full.data".format(cur_orbit_path)
-			sh=mr.MesaData(sh_finame)
-			t0=np.ceil(np.min(sh.star_age))
+			sh_finame="{}/LOGS/star_ages.txt".format(cur_orbit_path)
+			_,star_age=np.loadtxt(sh_finame)
+			t0=np.ceil(np.min(star_age))
 		else:
 			t0=params.t0[cur_param_ind]
 		cur_time=t0
@@ -77,8 +77,8 @@ def get_nearest_photo(cur_path, cur_time):
 		Model number at which to stop the simulation. Should be at least profile_num+profile_interval.
 	"""
 	# Read stellar history file
-	sh_finame="{}/LOGS/history_full.data".format(cur_path)
-	sh=mr.MesaData(sh_finame)
+	sh_finame="{}/LOGS/star_ages.txt".format(cur_path)
+	model_number,star_age=np.loadtxt(sh_finame)
 
 	# get a list of profiles
 	photo_list = glob.glob("{}/photos/*".format(cur_path))
@@ -86,12 +86,12 @@ def get_nearest_photo(cur_path, cur_time):
 	photo_list = [photo.split('/')[-1] for photo in photo_list]
 	# interpret the photo name as an integer for association with model_number
 	photo_model_num = [int(photo.split('x')[-1]) for photo in photo_list]
-	photo_model_ind = [pmn-sh.model_number[0] for pmn in photo_model_num]
+	photo_model_ind = [pmn-model_number[0] for pmn in photo_model_num]
 	photo_interval = np.diff(sorted(photo_model_num))[0]
 
 	# we want to get the closest photo to cur_time, but also earlier than cur_time
 	# first let's get the stellar age at each photo
-	photo_ages = np.array([sh.star_age[photo_num] for photo_num in photo_model_ind])
+	photo_ages = np.array([star_age[photo_num] for photo_num in photo_model_ind])
 	# then let's get the time difference between each photo and cur_time
 	photo_dt = cur_time - photo_ages
 
