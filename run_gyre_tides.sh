@@ -13,7 +13,7 @@ if [ ! -d "${cur_orbit_path}" ]; then
 	# get glue scripts
 	cp -r ${base_fidir}/orbev/* ${cur_orbit_path}
 	# copy the initial orbital conditions and update-parameters
-	cp ${base_fidir}/base_setup/gyre_base_setup/params.* ${cur_orbit_path}
+	cp ${base_fidir}/base_setup/gyre_base_setup/params* ${cur_orbit_path}
 fi
 cd ${cur_orbit_path}
 rm ${cur_orbit_path}/photos/*
@@ -55,6 +55,11 @@ fi
 # clean up the LOGS directory 
 # don't confuse this for deleting profile*.data.GYRE, which we very much want to keep
 rm ${orbev_fodir}/profile*.data
+# consolidate profiles into a single file
+python consolidate_profiles.py ${orbev_fodir}
+# get rid of profile*.data.GYRE to prevent redundancy
+rm ${orbev_fodir}/profile*.data.GYRE
+
 # clean up photos directory
 python clean_photo_album.py ${cur_star_path} ${cur_orbit_path}
 

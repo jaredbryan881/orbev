@@ -17,7 +17,7 @@ def main():
 		sys.exit(2)
 
 	cur_star_path=sys.argv[1]
-	cur_orbit_path=sys.argv[1]
+	cur_orbit_path=sys.argv[2]
 	pind=int(sys.argv[3])
 	cur_param_ind=int(sys.argv[4])
 

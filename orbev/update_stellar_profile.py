@@ -31,33 +31,52 @@ def main():
 	pnum1,pnum2=select_profiles(cur_time, sh.star_age, params.allowable_profiles, 2)
 	pct=(cur_time-sh.star_age[pnum1])/(sh.star_age[pnum2]-sh.star_age[pnum1])
 	assert (pct>=0 and pct<=1), "{} is not a valid range for interpolation. Must be between 0 and 1.".format(pct)
+	
 	# load profiles and their headers
+	with open("{}/profiles.pkl", "rb") as f:
+		headers,profiles=pkl.load(f)
+
+	# select the current profiles
 	if pct<0.001:
 		print("Loading profile {}".format(pnum1+1))
-		p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum1+1))
+		#p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum1+1))
+		#header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
+		profile=profiles[pnum1]
+		header=headers[pnum1]
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
-		save_profile(p,header)
+		save_profile(profile,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
-		p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum2+1))
+		#p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum2+1))
+		#header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
+		profile=profiles[pnum1]
+		header=headers[pnum1]
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
-		save_profile(p,header)
+		save_profile(profile,header)
 	else:
 		# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
 		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1+1, pnum2+1))
 		p1,header1=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum1+1))
 		p2,header2=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum2+1))
 
-		r1_interp, r2_interp=get_interpolation_axis(p1["r"], p2["r"])
+		profile1=profiles[pnum1]
+		profile2=profiles[pnum2]
+
+		header1=headers[pnum1]
+		header1=np.array([[int(header1[0]), header1[1], header1[2], header1[3], int(header1[4])]])
+		header2=headers[pnum2]
+		header2=np.array([[int(header2[0]), header2[1], header2[2], header2[3], int(header2[4])]])
+
+		r1_interp, r2_interp=get_interpolation_axis(profile1["r"], profile2["r"])
 
 		p_mid={}
-		for key in p1.keys():
+		for key in profile1.keys():
 			if key=="ind":
 				p_mid["ind"]=np.arange(1,len(r1_interp)+1)
 			elif key=="r":
 				p_mid["r"]=lin_interp_2d(r1_interp, r2_interp, pct)
 			else:
-				p_mid[key]=interpolate_single_quantity(r1_interp, p1, r2_interp, p2, pct, key)
+				p_mid[key]=interpolate_single_quantity(r1_interp, profile1, r2_interp, profile2, pct, key)
 
 		# interpolate header values
 		M_mid=lin_interp_2d(header1[1], header2[1], pct)
