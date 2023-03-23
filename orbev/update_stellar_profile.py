@@ -33,32 +33,25 @@ def main():
 	assert (pct>=0 and pct<=1), "{} is not a valid range for interpolation. Must be between 0 and 1.".format(pct)
 	
 	# load profiles and their headers
-	with open("{}/profiles.pkl", "rb") as f:
+	with open("{}/profiles.pkl".format(base_profile_dir), "rb") as f:
 		headers,profiles=pkl.load(f)
 
 	# select the current profiles
 	if pct<0.001:
 		print("Loading profile {}".format(pnum1+1))
-		#p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum1+1))
-		#header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		profile=profiles[pnum1]
 		header=headers[pnum1]
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(profile,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
-		#p,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum2+1))
-		#header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
-		profile=profiles[pnum1]
-		header=headers[pnum1]
+		profile=profiles[pnum2]
+		header=headers[pnum2]
 		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(profile,header)
 	else:
 		# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
 		print("Interpolating {}% between profile {} and {}".format(pct*100, pnum1+1, pnum2+1))
-		p1,header1=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum1+1))
-		p2,header2=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum2+1))
-
 		profile1=profiles[pnum1]
 		profile2=profiles[pnum2]
 

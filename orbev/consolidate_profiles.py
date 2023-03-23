@@ -17,7 +17,7 @@ def main():
 		headers.append(header)
 		profiles.append(profile)
 
-	with open("{}/profiles.pkl", "wb") as f:
+	with open("{}/profiles.pkl".format(base_profile_dir), "wb") as f:
 		pkl.dump([headers, profiles], f)
 
 if __name__=="__main__":
