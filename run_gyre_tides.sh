@@ -99,8 +99,14 @@ do
 			echo "Not sure how you got here. Check your MESA segment preparation."
 		fi
 
-		# clean up the LOGS directory
+		# clean up the LOGS directory 
+		# don't confuse this for deleting profile*.data.GYRE, which we very much want to keep
 		rm ${orbev_fodir}/profile*.data
+		# consolidate profiles into a single file
+		python consolidate_profiles.py ${orbev_fodir}
+		# get rid of profile*.data.GYRE to prevent redundancy
+		rm ${orbev_fodir}/profile*.data.GYRE
+
 		# clean up photos directory
 		python clean_photo_album.py ${cur_star_path} ${cur_orbit_path}
 
