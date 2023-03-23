@@ -5,6 +5,8 @@ from model_io import load_profile, save_profile, load_orbital_state
 from interpolate_profile import select_profiles, get_interpolation_axis, lin_interp_2d, interpolate_single_quantity
 import mesa_reader as mr
 
+import pickle as pkl
+
 import params
 
 from RK45 import RK45_tableau
@@ -31,7 +33,7 @@ def main():
 	pnum1,pnum2=select_profiles(cur_time, sh.star_age, params.allowable_profiles, 2)
 	pct=(cur_time-sh.star_age[pnum1])/(sh.star_age[pnum2]-sh.star_age[pnum1])
 	assert (pct>=0 and pct<=1), "{} is not a valid range for interpolation. Must be between 0 and 1.".format(pct)
-	
+
 	# load profiles and their headers
 	with open("{}/profiles.pkl".format(base_profile_dir), "rb") as f:
 		headers,profiles=pkl.load(f)
@@ -41,13 +43,13 @@ def main():
 		print("Loading profile {}".format(pnum1+1))
 		profile=profiles[pnum1]
 		header=headers[pnum1]
-		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
+		header=np.array([int(header[0]), header[1], header[2], header[3], int(header[4])])
 		save_profile(profile,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
 		profile=profiles[pnum2]
 		header=headers[pnum2]
-		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
+		header=np.array([int(header[0]), header[1], header[2], header[3], int(header[4])])
 		save_profile(profile,header)
 	else:
 		# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
@@ -56,9 +58,9 @@ def main():
 		profile2=profiles[pnum2]
 
 		header1=headers[pnum1]
-		header1=np.array([[int(header1[0]), header1[1], header1[2], header1[3], int(header1[4])]])
+		header1=np.array([int(header1[0]), header1[1], header1[2], header1[3], int(header1[4])])
 		header2=headers[pnum2]
-		header2=np.array([[int(header2[0]), header2[1], header2[2], header2[3], int(header2[4])]])
+		header2=np.array([int(header2[0]), header2[1], header2[2], header2[3], int(header2[4])])
 
 		r1_interp, r2_interp=get_interpolation_axis(profile1["r"], profile2["r"])
 
@@ -77,7 +79,7 @@ def main():
 		L_mid=lin_interp_2d(header1[3], header2[3], pct)
 
 		# write interpolated header and profile to a profile.data.GYRE file
-		header_mid=np.array([[len(r1_interp), M_mid, R_mid, L_mid, int(101)]])
+		header_mid=np.array([len(r1_interp), M_mid, R_mid, L_mid, int(101)])
 		save_profile(p_mid, header_mid)
 
 	# interpolate and save current stellar moment of inertia

@@ -12,8 +12,10 @@ def main():
 	headers  = []
 	profiles = []
 	for pnum in params.allowable_profiles:
-		profile,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum+1))
-
+		try:
+			profile,header=load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pnum))
+		except:
+			continue
 		headers.append(header)
 		profiles.append(profile)
 

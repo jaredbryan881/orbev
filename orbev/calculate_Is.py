@@ -1,8 +1,9 @@
 import sys
 import os
 
+import pickle as pkl
+
 import numpy as np
-from model_io import load_profile
 
 # constants
 G = 6.67430e-11  # [m3 kg-1 s-2]
@@ -14,11 +15,11 @@ def main():
 	base_profile_dir=sys.argv[1]
 
 	print("Calculating Stellar MOIs")
-	n_files=sum([len([file for file in files if ('.data.GYRE' in file)]) for root, dirs, files in sorted(os.walk(base_profile_dir))])
-	pinds = np.arange(1,1+n_files)
-	Is=np.zeros(len(pinds))
-	for (i,pind) in enumerate(pinds):
-		profile, header = load_profile("{}/profile{}.data.GYRE".format(base_profile_dir, pind))
+	with open("{}/profiles.pkl".format(base_profile_dir), "rb") as f:
+		headers,profiles=pkl.load(f)
+
+	Is=np.zeros(len(profiles))
+	for (i,profile) in enumerate(profiles):
 		Is[i] = MOI(profile["M"], profile["r"]) # Msun*Rsun^2
 
 	np.savetxt("{}/stellar_MOIs.txt".format(base_profile_dir), Is)
