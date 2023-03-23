@@ -86,7 +86,7 @@ def get_nearest_photo(cur_path, cur_time):
 	photo_list = [photo.split('/')[-1] for photo in photo_list]
 	# interpret the photo name as an integer for association with model_number
 	photo_model_num = [int(photo.split('x')[-1]) for photo in photo_list]
-	photo_model_ind = [pmn-model_number[0] for pmn in photo_model_num]
+	photo_model_ind = [pmn-int(model_number[0]) for pmn in photo_model_num]
 	photo_interval = np.diff(sorted(photo_model_num))[0]
 
 	# we want to get the closest photo to cur_time, but also earlier than cur_time
