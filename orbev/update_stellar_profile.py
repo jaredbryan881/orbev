@@ -79,7 +79,7 @@ def main():
 		L_mid=lin_interp_2d(header1[3], header2[3], pct)
 
 		# write interpolated header and profile to a profile.data.GYRE file
-		header_mid=np.array([len(r1_interp), M_mid, R_mid, L_mid, int(101)])
+		header_mid=np.array([[len(r1_interp), M_mid, R_mid, L_mid, int(101)]])
 		save_profile(p_mid, header_mid)
 
 	# interpolate and save current stellar moment of inertia

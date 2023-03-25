@@ -16,12 +16,11 @@ def main():
 
 	# load times of MESA profiles
 	if params.use_stored_profiles:
-		# assume only local profiles exist
+		# assume we have every profile stored locally
 		sh_finame="{}/star_ages.txt".format(foname)
 		_,star_age=np.loadtxt(sh_finame)
 	else:
-		# assume we have all profiles
-		# we should always be in-bounds until the simulation finishes (assuming t0 set properly)
+		# take only times from current segment of profiles
 		sh_finame="{}/history.data".format(foname)
 		sh=mr.MesaData(sh_finame)
 		star_age=sh.star_age
