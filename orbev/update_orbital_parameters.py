@@ -52,15 +52,14 @@ def main():
 
 		adot=hf["a_dot"][:,0]*fs*365*cur_R*(Rsun/au) # au/yr
 
-		Jdot=hf["J_dot"][:,0]*fs*365 # 1/yr
-		Jdot*=(cur_R**(1/2) * ((G*(Rsun**3)/Msun)**(1/2))*86400 * cur_M**(3/2)) # Msun*Rsun**2*cyc/day/yr
-		profile, header = load_profile("./profile_cur.data.GYRE")
-
+		Jdot=hf["J_dot"][:,0] # GM^2/R
 		if os.path.exists("current_stellar_MOI.txt"):
 			I = np.loadtxt("current_stellar_MOI.txt")
 		else:
-			I = MOI(profile["M"], profile["r"]) # Msun*Rsun^2
-		OmegaRotdot = Jdot/I # cyc/day/yr
+			profile, header = load_profile("./profile_cur.data.GYRE")
+			I = MOI(profile["M"], profile["r"]) # M*R^2
+		OmegaRotdot = Jdot/I # GM/R^3 (squared dynamical timescale)
+		OmegaRotdot*=(fs**2)*365 # [cyc/day/yr]
 
 	# get an RK4(5) tableau to get the intermediate function evalution step size
 	tab=RK45_tableau()
@@ -99,7 +98,7 @@ def main():
 		new_OmegaOrb = params.OmegaOrb0[cur_param_ind]
 		new_OmegaRot = params.OmegaRot0[cur_param_ind]
 
-	# update the RKF buffer
+	# update the RKF buffer, which stores orbital configurations for intermediate steps
 	update_history(new_time, new_a, new_e, new_OmegaRot, cur_dt, foname="RKF_buffer.data")
 
 	# finally use the intermediate orbital evolution rates to make an update to orbital_history.data
@@ -107,36 +106,43 @@ def main():
 		retry_flag=False
 		new_time = cur_time + cur_dt
 
+		# estimate error in e
 		new_e = cur_e + cur_dt*np.dot(tab.b[0,:], edot)
 		new_e_star = cur_e + cur_dt*np.dot(tab.b[1,:], edot)
 		e_Delta1 = np.abs(new_e-new_e_star)
 		e_Delta0 = params.e_eps*cur_e
+		# propose new dt based on error in e
 		if e_Delta0>=e_Delta1:
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/5)
 		else:
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/4)
 			retry_flag=True
 
+		# estimate error in a
 		new_a = cur_a + cur_dt*np.dot(tab.b[0,:], adot)
 		new_a_star = cur_a + cur_dt*np.dot(tab.b[1,:], adot)
 		a_Delta1 = np.abs(new_a-new_a_star)
 		a_Delta0 = params.a_eps*cur_a
+		# propose new dt based on error in a
 		if a_Delta0>=e_Delta1:
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/5)
 		else:
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/4)
 			retry_flag=True
 
+		# estimate error in OmegaRot
 		new_OmegaRot = cur_OmegaRot + cur_dt*np.dot(tab.b[0,:], OmegaRotdot)
 		new_OmegaRot_star = cur_OmegaRot + cur_dt*np.dot(tab.b[1,:], OmegaRotdot)
 		OmegaRot_Delta1 = np.abs(new_OmegaRot-new_OmegaRot_star)
 		OmegaRot_Delta0 = params.OmegaRot_eps*cur_OmegaRot
+		# propose new dt based on error in OmegaRot
 		if OmegaRot_Delta0>=OmegaRot_Delta1:
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/5)
 		else:
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/4)
 			retry_flag=True
 
+		# 
 		new_dt = np.min([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
 
 		if retry_flag:
