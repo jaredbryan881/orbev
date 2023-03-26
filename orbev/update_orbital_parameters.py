@@ -58,7 +58,7 @@ def main():
 		else:
 			profile, header = load_profile("./profile_cur.data.GYRE")
 			I = MOI(profile["M"], profile["r"]) # M*R^2
-		OmegaRotdot = Jdot/I # GM/R^3 (squared dynamical timescale)
+		OmegaRotdot = Jdot/I # GM/R^3 (1/squared dynamical timescale)
 		OmegaRotdot*=(fs**2)*365 # [cyc/day/yr]
 
 	# get an RK4(5) tableau to get the intermediate function evalution step size
@@ -114,6 +114,7 @@ def main():
 		# propose new dt based on error in e
 		if e_Delta0>=e_Delta1:
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/5)
+			new_dt_e = np.max([cur_dt, new_dt_e])
 		else:
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/4)
 			retry_flag=True
@@ -126,6 +127,7 @@ def main():
 		# propose new dt based on error in a
 		if a_Delta0>=e_Delta1:
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/5)
+			new_dt_a = np.max([cur_dt, new_dt_a])
 		else:
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/4)
 			retry_flag=True
@@ -138,6 +140,7 @@ def main():
 		# propose new dt based on error in OmegaRot
 		if OmegaRot_Delta0>=OmegaRot_Delta1:
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/5)
+			new_dt_OmegaRot = np.max([cur_dt, new_dt_OmegaRot])
 		else:
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/4)
 			retry_flag=True
