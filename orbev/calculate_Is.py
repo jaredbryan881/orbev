@@ -40,11 +40,8 @@ def MOI(M, R):
 	:return I: float
 		Moment of inertia [Msun * Rsun**2]
 	"""
-	M/=1000 # [kg]
-	M/=Msun # [Msun]
-
-	R/=100  # [m]
-	R/=Rsun # [Rsun]
+	M/=M.max() # [Mstar]
+	R/=R.max() # [Rstar]
 
 	# mass in each layer
 	dM = M[1:]-M[:-1]
