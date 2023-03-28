@@ -25,14 +25,24 @@ def main():
 		sh=mr.MesaData(sh_finame)
 		star_age=sh.star_age
 
-	# compare times
-	if (np.min(star_age)<=cur_time) and (np.max(star_age)>=(cur_time+cur_dt)):
-		# in bounds
-		sys.exit(0)
+	if params.time_reversed:
+		# compare times
+		if (np.min(star_age)<=cur_time-cur_dt) and (np.max(star_age)>=(cur_time)):
+			# in bounds
+			sys.exit(0)
+		else:
+			# out of bounds
+			print("Time ({} Myr) out of bounds ({}-{} Myr)".format(cur_time/1e6, star_age[0]/1e6, star_age[-1]/1e6))
+			sys.exit(1)
 	else:
-		# out of bounds
-		print("Time ({} Myr) out of bounds ({}-{} Myr)".format(cur_time/1e6, star_age[0]/1e6, star_age[-1]/1e6))
-		sys.exit(1)
+		# compare times
+		if (np.min(star_age)<=cur_time) and (np.max(star_age)>=(cur_time+cur_dt)):
+			# in bounds
+			sys.exit(0)
+		else:
+			# out of bounds
+			print("Time ({} Myr) out of bounds ({}-{} Myr)".format(cur_time/1e6, star_age[0]/1e6, star_age[-1]/1e6))
+			sys.exit(1)
 
 if __name__=="__main__":
 	main()
