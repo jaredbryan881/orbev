@@ -99,7 +99,7 @@ def main():
 		new_OmegaRot = params.OmegaRot0[cur_param_ind]
 
 	# update the RKF buffer, which stores orbital configurations for intermediate steps
-	update_history(new_time, new_a, new_e, new_OmegaRot, cur_dt, foname="RKF_buffer.data")
+	update_history(new_time, new_a, new_e, new_OmegaRot, np.abs(cur_dt), foname="RKF_buffer.data")
 
 	# finally use the intermediate orbital evolution rates to make an update to orbital_history.data
 	if rk_ind==5:
