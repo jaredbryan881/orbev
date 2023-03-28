@@ -40,6 +40,10 @@ def main():
 	cur_time,cur_a,cur_e,cur_OmegaRot,cur_dt=load_orbital_state("orbital_history.data")
 	cur_OmegaOrb=a_to_OmegaOrb(cur_a, cur_M)
 
+	# step backward in time if time-reversed simulation
+	if params.time_reversed:
+		cur_dt=-cur_dt
+
 	# Define dimensionalizing constant
 	fs = freq_scale(cur_M*Msun, cur_R*Rsun)
 
@@ -72,9 +76,6 @@ def main():
 	# calculate the timestep and update orbital parameters
 	if params.live_orbit:
 		# calculate the timestep
-		# step backward in time if time-reversed simulation
-		if params.time_reversed:
-			cur_dt=-cur_dt
 		new_time=cur_time+tab.c[rk_ind]*cur_dt
 
 		# TODO: fix time-reversed simulations
@@ -104,6 +105,8 @@ def main():
 	# finally use the intermediate orbital evolution rates to make an update to orbital_history.data
 	if rk_ind==5:
 		retry_flag=False
+
+		# take a full step
 		new_time = cur_time + cur_dt
 
 		### Propose a new timestep based on error in orbital parameters
@@ -123,6 +126,7 @@ def main():
 			else:
 				new_dt_e = np.max([cur_dt, new_dt_e])
 		else:
+			# error was too large, decrease timestep
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/4)
 			retry_flag=True
 
@@ -142,6 +146,7 @@ def main():
 			else:
 				new_dt_a = np.max([cur_dt, new_dt_a])
 		else:
+			# error was too large, decrease timestep
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/4)
 			retry_flag=True
 
@@ -161,6 +166,7 @@ def main():
 			else:
 				new_dt_OmegaRot = np.max([cur_dt, new_dt_OmegaRot])
 		else:
+			# error was too large, decrease timestep
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/4)
 			retry_flag=True
 

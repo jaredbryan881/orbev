@@ -26,7 +26,7 @@ def main():
 		star_age=sh.star_age
 
 	if params.time_reversed:
-		# compare times
+		# make sure cur_time is one step within history lower bound
 		if (np.min(star_age)<=cur_time-cur_dt) and (np.max(star_age)>=(cur_time)):
 			# in bounds
 			sys.exit(0)
@@ -35,7 +35,7 @@ def main():
 			print("Time ({} Myr) out of bounds ({}-{} Myr)".format(cur_time/1e6, star_age[0]/1e6, star_age[-1]/1e6))
 			sys.exit(1)
 	else:
-		# compare times
+		# make sure cur_time is one step within history upper bound
 		if (np.min(star_age)<=cur_time) and (np.max(star_age)>=(cur_time+cur_dt)):
 			# in bounds
 			sys.exit(0)
