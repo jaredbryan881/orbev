@@ -24,6 +24,9 @@ def main():
 	oh_finame="orbital_history.data"
 	cur_time,_,_,_,cur_dt=load_orbital_state(oh_finame)
 
+	if params.time_reversed:
+		cur_dt=-cur_dt
+
 	# update the current time based on where we are in the RKF step
 	tab=RK45_tableau()
 	cur_time = cur_time + tab.c[rk_ind]*cur_dt

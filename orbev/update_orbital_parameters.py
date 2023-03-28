@@ -106,6 +106,7 @@ def main():
 		retry_flag=False
 		new_time = cur_time + cur_dt
 
+		### Propose a new timestep based on error in orbital parameters
 		# estimate error in e
 		new_e = cur_e + cur_dt*np.dot(tab.b[0,:], edot)
 		new_e_star = cur_e + cur_dt*np.dot(tab.b[1,:], edot)
@@ -113,8 +114,14 @@ def main():
 		e_Delta0 = params.e_eps*cur_e
 		# propose new dt based on error in e
 		if e_Delta0>=e_Delta1:
+			# error wasn't too large, increase timestep
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/5)
-			new_dt_e = np.max([cur_dt, new_dt_e])
+			
+			# don't allow timestep to shrink just because we chose an aggressive safety factor
+			if params.time_reversed:
+				new_dt_e = np.min([cur_dt, new_dt_e])
+			else:
+				new_dt_e = np.max([cur_dt, new_dt_e])
 		else:
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/4)
 			retry_flag=True
@@ -126,8 +133,14 @@ def main():
 		a_Delta0 = params.a_eps*cur_a
 		# propose new dt based on error in a
 		if a_Delta0>=e_Delta1:
+			# error wasn't too large, increase timestep
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/5)
-			new_dt_a = np.max([cur_dt, new_dt_a])
+			
+			# don't allow timestep to shrink just because we chose an aggressive safety factor
+			if params.time_reversed:
+				new_dt_a = np.min([cur_dt, new_dt_a])
+			else:
+				new_dt_a = np.max([cur_dt, new_dt_a])
 		else:
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/4)
 			retry_flag=True
@@ -139,22 +152,32 @@ def main():
 		OmegaRot_Delta0 = params.OmegaRot_eps*cur_OmegaRot
 		# propose new dt based on error in OmegaRot
 		if OmegaRot_Delta0>=OmegaRot_Delta1:
+			# error wasn't too large, increase timestep
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/5)
-			new_dt_OmegaRot = np.max([cur_dt, new_dt_OmegaRot])
+			
+			# don't allow timestep to shrink just because we chose an aggressive safety factor
+			if params.time_reversed:
+				new_dt_OmegaRot = np.min([cur_dt, new_dt_OmegaRot])
+			else:
+				new_dt_OmegaRot = np.max([cur_dt, new_dt_OmegaRot])
 		else:
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/4)
 			retry_flag=True
 
-		# 
-		new_dt = np.min([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
+		# choose the most conservative timestep
+		if params.time_reversed:
+			new_dt = np.max([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
+		else:
+			new_dt = np.min([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
 
 		if retry_flag:
+			# update dt in orbital history, but leave orbital/stellar state unchanged
 			print("Error too high, lowering timestep from {} to {}.".format(cur_dt, new_dt))
-			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, int(new_dt), foname="orbital_history.data")
+			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, int(np.abs(new_dt)), foname="orbital_history.data")
 		else:
+			# update orbital/stellar state as well as dt
 			print("Step successful, increasing timestep from {} to {}".format(cur_dt, new_dt))
-			update_history(new_time, new_a, new_e, new_OmegaRot, int(new_dt), foname="orbital_history.data")
-
+			update_history(new_time, new_a, new_e, new_OmegaRot, int(np.abs(new_dt)), foname="orbital_history.data")
 
 		print("##################################")
 		print("e: {:.15f} -> {:.15f}".format(cur_e, new_e))
@@ -174,7 +197,6 @@ def main():
 		print("##################################")
 		print("dt: {} -> {}".format(int(cur_dt), int(new_dt)))
 		print("##################################")
-
 
 if __name__=="__main__":
 	main()
