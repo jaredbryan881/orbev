@@ -35,7 +35,12 @@ def main():
 	else:
 		# load current time
 		oh_finame="orbital_history.data"
-		cur_time,_,_,_,_=load_orbital_state(oh_finame)
+		cur_time,_,_,_,cur_dt=load_orbital_state(oh_finame)
+
+		# consider photos one timestep previous to account for lack of buffer on 
+		# low end of the history ages with respect to the photo ages
+		if params.time_reversed:
+			cur_time-=cur_dt
 
 	# locate the nearest photo
 	photo_string, max_model_number = get_nearest_photo(cur_star_path, cur_time)

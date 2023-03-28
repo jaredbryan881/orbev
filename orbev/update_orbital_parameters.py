@@ -139,7 +139,7 @@ def main():
 		if a_Delta0>=e_Delta1:
 			# error wasn't too large, increase timestep
 			new_dt_a = params.safety_factor*cur_dt*(a_Delta0/a_Delta1)**(1/5)
-			
+
 			# don't allow timestep to shrink just because we chose an aggressive safety factor
 			if params.time_reversed:
 				new_dt_a = np.min([cur_dt, new_dt_a])
@@ -159,7 +159,7 @@ def main():
 		if OmegaRot_Delta0>=OmegaRot_Delta1:
 			# error wasn't too large, increase timestep
 			new_dt_OmegaRot = params.safety_factor*cur_dt*(OmegaRot_Delta0/OmegaRot_Delta1)**(1/5)
-			
+
 			# don't allow timestep to shrink just because we chose an aggressive safety factor
 			if params.time_reversed:
 				new_dt_OmegaRot = np.min([cur_dt, new_dt_OmegaRot])
@@ -172,7 +172,7 @@ def main():
 
 		# choose the most conservative timestep
 		if params.time_reversed:
-			new_dt = np.max([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
+			new_dt = np.max([-params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
 		else:
 			new_dt = np.min([params.max_dt, new_dt_e, new_dt_a, new_dt_OmegaRot])
 
