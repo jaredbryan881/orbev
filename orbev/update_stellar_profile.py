@@ -43,13 +43,13 @@ def main():
 		print("Loading profile {}".format(pnum1+1))
 		profile=profiles[pnum1]
 		header=headers[pnum1]
-		header=np.array([int(header[0]), header[1], header[2], header[3], int(header[4])])
+		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(profile,header)
 	elif (1-pct)<0.001:
 		print("Loading profile {}".format(pnum2+1))
 		profile=profiles[pnum2]
 		header=headers[pnum2]
-		header=np.array([int(header[0]), header[1], header[2], header[3], int(header[4])])
+		header=np.array([[int(header[0]), header[1], header[2], header[3], int(header[4])]])
 		save_profile(profile,header)
 	else:
 		# If we weren't close enough to a grid point, then we need to interpolate between the stellar models
