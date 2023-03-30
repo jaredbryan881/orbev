@@ -53,5 +53,5 @@
 
 &tides_output
     summary_file = 'tide_orbit.h5'
-    summary_item_list = 'l,m,k,eul_Psi_ref,Phi_T_ref,eul_Phi_ref,Omega_orb,q,e,R_a,cbar,Gbar_1,Gbar_2,Gbar_3,Gbar_4,eta,freq,xi_r_ref,lag_L_ref'
+    summary_item_list = 'id,l,m,k,eul_Psi_ref,Phi_T_ref,eul_Phi_ref,Omega_orb,q,e,R_a,cbar,Gbar_1,Gbar_2,Gbar_3,Gbar_4,eta,freq,x_ref,xi_r_ref,lag_L_ref'
 /
