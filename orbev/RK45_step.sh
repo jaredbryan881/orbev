@@ -2,6 +2,7 @@
 
 # take one timestep using the Runge-Kutta-Fehlberg method, aka RK4(5)
 # involves six function evaluations
+fail_flag=0
 for rk_ind in {0..5}
 do
 	echo "RK4(5): function evaluation number ${rk_ind}"
@@ -27,6 +28,14 @@ do
 		python calculate_orbev.py ${orbev_fodir} tidal_response_history.h5 $rk_ind
 	fi
 	python calculate_orbev.py ${orbev_fodir} tidal_response_RKF_step.h5 $rk_ind
+	repackage_status=$?
+	if [ "${repackage_status}" -eq 0 ]; then
+		echo "tide_orbit.h5 was created successfully at step $i"
+	else
+		echo "tide_orbit.h5 not created, exiting."
+		fail_flag=1
+		break
+	fi
 
 	# dimensionalize the orbital evolution rates
 	# update the RKF_buffer data file with intermediate function evaluations

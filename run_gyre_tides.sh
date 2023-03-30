@@ -127,8 +127,7 @@ do
 	source ./RK45_step.sh
 
 	# break if no response was created
-	repackage_status=$?
-	if [ "${repackage_status}" -eq 0 ]; then
+	if [ "${fail_flag}" -eq 0 ]; then
 		echo "tide_orbit.h5 was created successfully at step $i"
 	else
 		echo "tide_orbit.h5 not created, exiting."
