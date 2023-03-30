@@ -52,10 +52,12 @@
 
   ! Mixing parameters
   MLT_option='Henyey'
-  mixing_length_alpha=1.8d0
+  mixing_length_alpha=1.8
+  Henyey_MLT_y_param=0.33333333d0
+  Henyey_MLT_nu_param=8
 
   use_Ledoux_criterion=.true.
-  do_conv_premix = .true.
+  ! do_conv_premix = .true.
   alpha_semiconvection=0.1
   thermohaline_coeff=666
   thermohaline_option='Kippenhahn'
@@ -68,7 +70,8 @@
   overshoot_f0(1) = 0.005
 
   ! Timestep and mesh parameters
-  mesh_delta_coeff = 0.5
+  mesh_delta_coeff = 0.3
+  varcontrol_target = 5.d-4
 
   ! Stopping conditions
   ! stop when the star nears ZAMS (Lnuc/L > 0.99)

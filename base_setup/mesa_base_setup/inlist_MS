@@ -50,10 +50,12 @@
 
   ! Mixing parameters
   MLT_option='Henyey'
-  mixing_length_alpha=1.8d0
+  mixing_length_alpha=1.8
+  Henyey_MLT_y_param=0.33333333d0
+  Henyey_MLT_nu_param=8
 
   use_Ledoux_criterion=.true.
-  do_conv_premix = .true.
+  ! do_conv_premix = .true.
   alpha_semiconvection=0.1
   thermohaline_coeff=666
   thermohaline_option='Kippenhahn'
@@ -69,10 +71,13 @@
   xa_central_lower_limit_species(1) = 'h1'
   xa_central_lower_limit(1) = 0.01
 
-  max_model_number=1000
+  max_model_number=1005
 
   ! Timestep and mesh parameters
-  mesh_delta_coeff = 0.5
+  mesh_delta_coeff = 0.3
+  varcontrol_target = 5.d-4 
+
+  max_age=1d8
 
   max_years_for_timestep=1e4
 
@@ -81,7 +86,7 @@
   history_interval=1
   profile_interval=10000
   terminal_interval=100
-  photo_interval=100
+  photo_interval=1000
   photo_digits=6
 
   log_directory='LOGS'
