@@ -119,7 +119,7 @@ def main():
 		if e_Delta0>=e_Delta1:
 			# error wasn't too large, increase timestep
 			new_dt_e = params.safety_factor*cur_dt*(e_Delta0/e_Delta1)**(1/5)
-			
+
 			# don't allow timestep to shrink just because we chose an aggressive safety factor
 			if params.time_reversed:
 				new_dt_e = np.min([cur_dt, new_dt_e])
@@ -179,11 +179,11 @@ def main():
 		if retry_flag:
 			# update dt in orbital history, but leave orbital/stellar state unchanged
 			print("Error too high, lowering timestep from {} to {}.".format(cur_dt, new_dt))
-			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, int(np.abs(new_dt)), foname="orbital_history.data")
+			update_history(cur_time, cur_a, cur_e, cur_OmegaRot, np.abs(new_dt), foname="orbital_history.data")
 		else:
 			# update orbital/stellar state as well as dt
 			print("Step successful, increasing timestep from {} to {}".format(cur_dt, new_dt))
-			update_history(new_time, new_a, new_e, new_OmegaRot, int(np.abs(new_dt)), foname="orbital_history.data")
+			update_history(new_time, new_a, new_e, new_OmegaRot, np.abs(new_dt), foname="orbital_history.data")
 
 		print("##################################")
 		print("e: {:.15f} -> {:.15f}".format(cur_e, new_e))
