@@ -49,7 +49,7 @@ def main():
 
 		# calculate amplitude spectrum for each wavelength band and time
 		try:
-			dJ[i_t]=eval_fourier_spec(xi_r[i_t], lag_L[i_t], omega, specgrid, lams, atm_params, theta_0, phi_0)
+			dJ[i_t]=calculate_spectrum(xi_r[i_t], lag_L[i_t], omega, specgrid, lams, atm_params, theta_0, phi_0)
 		except Exception as ex:
 			print(ex)
 			dJ[i_t]=np.nan
@@ -69,7 +69,7 @@ def main():
 		plt.gca().set_aspect("auto")
 		plt.show()
 
-def eval_fourier_spec(xi_r, lag_L, omega, specgrid, lams, x, theta_0, phi_0):
+def calculate_spectrum(xi_r, lag_L, omega, specgrid, lams, x, theta_0, phi_0):
 	"""
 	Evaluate Fourier amplitudes.
 	"""
