@@ -1,86 +1,135 @@
 import numpy as np
 import pandas as pd
 import h5py
+import os
+
+import pymsg as pm
 
 import scipy.special as ss
-
-from bandpass_correction import bandpass_correction
 
 def main():
 	base_finame="../data/figure/gyre_maxerror/M1.36_Z0.02262_orb0_highorot"
 	with h5py.File(base_finame+"/tidal_response_history.h5", "r") as hf:
 		lag_L=hf["lag_L_ref"][:]
 		xi_r=hf["xi_r_ref"][:]
-	h=pd.read_csv("{}/orbital_history.data".format(base_finame))
-	Ts=np.loadtxt(base_finame+"/Ts.txt")
+		Omega_orb=hf["Omega_orb"][:]
 
-	n_times=lag_L.shape[0]
+	h=pd.read_csv("{}/orbital_history.data".format(base_finame))
+	fs=np.loadtxt(base_finame+"/fs.txt")
+	Teff=np.loadtxt(base_finame+"/Ts.txt")
+	logg=np.loadtxt(base_finame+"/loggs.txt")
+
+	npts=np.min([h.time.values.shape[0], len(fs)])
+
+	n_times=npts#lag_L.shape[0]
 	n_k=lag_L.shape[2]
 
+	theta_0=0
+	phi_0=0
+
+	# Load MSG spectroscopic grid
+	MSG_DIR = os.environ['MSG_DIR']
+	GRID_DIR = os.path.join(MSG_DIR, 'data', 'grids')
+
+	specgrid_file_name = os.path.join(GRID_DIR, 'sg-demo.h5')
+	specgrid = pm.SpecGrid(specgrid_file_name)
+
+	# define wavelength bands
+	n_lam=7
+	lams=np.linspace(3000., 9000., n_lam) # [Angstrom]
+	n_bands=n_lam-1
+
 	# initialize the amplitude spectra
-	dJ = np.zeros((n_times,n_k), dtype=complex)
+	dJ = np.zeros((n_times,n_k,n_bands), dtype=complex)
 	# iterate over times
-	for t in range(n_times):
+	for i_t in range(n_times):
+		# calculate bandpass correction for current temperature
+		atm_params = {'Teff': Teff[i_t], 'log(g)': logg[i_t]}
+		omega = np.arange(n_k)*Omega_orb[i_t]/fs[i_t]
+
+		# calculate amplitude spectrum for each wavelength band and time
 		try:
-			# calculate bandpass correction for current temperature
-			bpc=bandpass_correction([0.5e-6,5e-6], Ts[t])
+			dJ[i_t]=eval_fourier_spec(xi_r[i_t], lag_L[i_t], omega, specgrid, lams, atm_params, theta_0, phi_0)
+		except Exception as ex:
+			print(ex)
+			dJ[i_t]=np.nan
 
-			# calculate amplitude spectrum for each time
-			dJ[t]=calculate_spectrum(xi_r[t], lag_L[t], 0, 0)*bpc
-		except:
-			dJ[t]=np.nan
+	time=h.time.values[:npts]
+	dJ=dJ[:npts,:,:]
 
-	print(np.max(np.log10(np.abs(dJ[~np.isnan(dJ)]))))
+	import matplotlib.pyplot as plt
+	import matplotlib.cm as cm
+	for i_b in range(n_bands):
+		dJ_net=dJ[:,:,i_b].sum(axis=1)
+		plt.plot(time, np.log10(np.abs(dJ_net)), c=cm.inferno(i_b/n_bands))
+	plt.show()
 
-def calculate_spectrum(xi_r, lag_L, theta_0, phi_0):
+	for i_b in range(n_bands):
+		plt.imshow(np.log10(np.abs(dJ[:,:,i_b].T)), origin='lower', cmap='inferno', clim=[-9,-3])
+		plt.gca().set_aspect("auto")
+		plt.show()
+
+def eval_fourier_spec(xi_r, lag_L, omega, specgrid, lams, x, theta_0, phi_0):
 	"""
-	Calculate the amplitude spectrum of relative flux variations due to tidal forcing.
-
-	This result is from Townsend (2003) A semi-analytical formula for the light variations due to low-frequency g modes in rotating stars
-	This implementation is from GYRE https://github.com/rhdtownsend/gyre/blob/c1b346dabfd6ec3b30b04f06ddbc90d164fabdc8/src/tide/plot_lightcurve.py
-
-	Arguments
-	---------
-	:param xi_r: np.array
-		Radial displacement at the stellar surface. Shape is (n_m, n_k) and elements are complex.
-	:param lag_L: np.array
-		Lagrangian flux perturbation at the stellar surface. Shape is (n_m, n_k) and elements are complex.
-	:param theta_0: float
-		Observer coordinate
-	:param phi_0: float
-		Observer coordinate
-
-	Returns
-	-------
-	:return A: np.array
-		Amplitude spectrum of relative flux variations. Shape is (n_k) and elements are complex.
+	Evaluate Fourier amplitudes.
 	"""
-	# Initialize the amplitude spectrum for current time
-	n_k=lag_L.shape[1]
-	A = np.zeros(n_k, dtype=complex)
+	# Initialize frequency / amplitude arrays
 
-	# Townsend (2003), eqns. (15) & (16) assuming I_x = const. (no limb darkening)
-	I_0 = 1/2
-	I_l = 1/8 # l=2
+	n_k=xi_r.shape[1]
+	n_lam=len(lams)
 
-	# Loop over m and k
-	l=2
-	for (i_m, m) in enumerate([0,2]):
-		# Townsend (2003), eqns. (12) & (13) assuming
-		# dlnI_x/dlnTeff = 4 (black body)
-		Yml = ss.sph_harm(m, l, phi_0, theta_0)
-		Rml = (2 + l)*(1 - l)*(I_l/I_0)*Yml
-		Tml = 4*(I_l/I_0)*Yml
+	l = 2
 
-		# Townsend (2003), eqns. 17 & 18
-		Del_R = np.sqrt(4.*np.pi)*xi_r[i_m]
-		Del_L = np.sqrt(4.*np.pi)*lag_L[i_m]
-		Del_T = (1/4)*(Del_L - 2*Del_R)
+	ks = np.arange(n_k)
+	A = np.zeros((n_k,n_lam-1), dtype=complex)
 
-		# Add the Fourier contribution
-		A += Del_R*Rml + Del_T*Tml
+	# Iterate through rows
+	for (i_m,m) in enumerate([0,2]):
+		# Townsend (2003), eqns. 4-6
+		Del_R = xi_r[i_m]
+		Del_L = lag_L[i_m]
+		Del_T = 0.25*(Del_L - 2*Del_R)
+		Del_g = -(2 + omega**2)*Del_R
 
+		# Townsend (2003), eqn. 15
+		I_0 = specgrid.D_moment(x, 0, lams)
+		I_l = specgrid.D_moment(x, l, lams)
+
+		dI_l_dlnTeff = specgrid.D_moment(x, l, lams, deriv={'Teff': True})*x['Teff']
+		dI_l_dlng    = specgrid.D_moment(x, l, lams, deriv={'log(g)': True})/np.log(10)
+
+		# Townsend (2003), eqns. 12-14
+		Y_lm = ss.sph_harm(m, l, phi_0, theta_0)
+
+		R_lm = (2+l)*(1-l)*I_l/I_0*Y_lm
+		T_lm = dI_l_dlnTeff/I_0*Y_lm
+		G_lm = dI_l_dlng/I_0*Y_lm
+
+		# Willems+(2010), eqn. 53
+		kappas=get_kappa(ks, m)
+
+		for i_b in range(n_lam-1):
+			# Townsend (2003), eqn. 11
+			A[:,i_b] += 2*kappas*(Del_R*R_lm[i_b] + Del_T*T_lm[i_b] + Del_g*G_lm[i_b])
+
+	# Return data
 	return A
+
+def get_kappa(ks, m):
+	kappas=[]
+	for k in ks:
+		if k == 0:
+			if m == 0:
+				kappa = 0.5
+			elif m >= 1:
+				kappa = 1.
+			else:
+				kappa = 0.
+		else:
+			kappa = 1.
+		kappas.append(kappa)
+
+	return np.array(kappas)
 
 if __name__=="__main__":
 	main()
