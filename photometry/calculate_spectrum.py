@@ -21,7 +21,7 @@ def main():
 
 	npts=np.min([h.time.values.shape[0], len(fs)])
 
-	n_times=npts#lag_L.shape[0]
+	n_times=npts
 	n_k=lag_L.shape[2]
 
 	theta_0=0
@@ -36,7 +36,7 @@ def main():
 
 	# define wavelength bands
 	n_lam=7
-	lams=np.linspace(3000., 9000., n_lam) # [Angstrom]
+	lams=np.linspace(6000., 9000., n_lam) # [Angstrom]
 	n_bands=n_lam-1
 
 	# initialize the amplitude spectra
