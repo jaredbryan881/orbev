@@ -8,7 +8,7 @@ import pymsg as pm
 import scipy.special as ss
 
 def main():
-	base_finame="../data/figure/gyre_maxerror/M1.36_Z0.02262_orb0_highorot"
+	base_finame="../data/long_time/M1.36_Z0.02262_orb0_loworot"
 	with h5py.File(base_finame+"/tidal_response_history.h5", "r") as hf:
 		lag_L=hf["lag_L_ref"][:]
 		xi_r=hf["xi_r_ref"][:]
