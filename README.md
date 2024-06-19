@@ -11,3 +11,6 @@ Integration of the orbital evolution rates is performed with the Runge-Kutta-Feh
 This is a fully explicit 4th order method with 5th order error estimation, which we use to adaptively set the timestep.
 Evaluation of the orbital evolution rates at arbitrary times is supported, with optimal transport-based interpolation between stellar models enabling the MESA and GYRE-tides simulations to be decoupled.
 You can also perform both forward and time-reversed simulations.
+
+Plotting scripts display the simulation outputs, including snapshots of the evolving stellar structure, tidal migration trajectories, and time-mode decompositions of the photometric amplitudes and orbital evolution rates.
+Abbreviated simulation outputs for reproducing the figures in Bryan et al. (2024) can be found on Zenodo (10.5281/zenodo.11509036).
